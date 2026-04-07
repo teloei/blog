@@ -1,0 +1,16 @@
+{
+  "name": "xiaogai-blog",
+  "compatibility_flags": ["nodejs_compat"],
+  "builds": [
+    {
+      "path": "dist",
+      "bundle": true
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "*",
+      "zone_name": "your-domain.com"
+    }
+  ]
+}
