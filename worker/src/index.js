@@ -821,6 +821,9 @@ function getSiteBaseUrl(request, env) {
   const custom = String(env.SITE_URL || "").trim();
   if (custom) return custom.replace(/\/+$/, "");
 
+  const forwarded = getForwardedSiteOrigin(request);
+  if (forwarded) return forwarded;
+
   const url = new URL(request.url);
   return `${url.protocol}//${url.host}`;
 }
@@ -1001,6 +1004,23 @@ function buildUploadUrl(request, env, key) {
     return `${customBase.replace(/\/+$/, "")}/${key}`;
   }
 
+  const forwarded = getForwardedSiteOrigin(request);
+  if (forwarded) {
+    return `${forwarded}/uploads/${key}`;
+  }
+
   const baseUrl = getSiteBaseUrl(request, env);
   return `${baseUrl}/uploads/${key}`;
+}
+
+function getForwardedSiteOrigin(request) {
+  const raw = String(request.headers.get("x-site-origin") || "").trim();
+  if (!raw) return "";
+
+  try {
+    const parsed = new URL(raw);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return "";
+  }
 }

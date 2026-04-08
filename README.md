@@ -3,6 +3,7 @@
 这个项目已经按 Cloudflare 部署方式拆分好：
 
 - `public/`：前端静态站点（直接用于 Cloudflare Pages）
+- `functions/`：Pages 代理层（将 `/blogApi`、`/uploads/*` 代理到 Worker，避免浏览器跨域/网络问题）
 - `worker/`：后端 API Worker（`/blogApi` + `/uploads/*`）
 - `worker/schema.sql`：D1 表结构（文章、评论）
 
@@ -25,6 +26,9 @@ public/
   style.css
   cloudbase-config.js
   rednote/
+functions/
+  blogApi.js
+  uploads/[[path]].js
 worker/
   src/index.js
   src/sample-posts.js
@@ -36,7 +40,8 @@ worker/
 
 1. 在 Cloudflare Pages 创建项目，`Build command` 留空。
 2. `Build output directory` 填：`public`。
-3. 发布后先记住 Pages 域名，例如 `https://your-pages.pages.dev`。
+3. 确保 Pages 项目启用了 Functions（本项目根目录已有 `functions/`）。
+4. 发布后先记住 Pages 域名，例如 `https://your-pages.pages.dev`。
 
 ## 2) 创建 D1 和 R2（后端存储）
 
@@ -70,14 +75,12 @@ npx wrangler deploy --config worker/wrangler.toml
 
 ## 4) 绑定 Worker 路由到 Pages 域名
 
-在 Worker 路由里配置：
+默认不需要配置 Worker 自定义路由：前端走同域 `/blogApi`，由 Pages Functions 代理到 Worker。
 
-- `https://你的站点域名/blogApi*`
-- `https://你的站点域名/uploads/*`
+如需直连 Worker，可在 [public/cloudbase-config.js](./public/cloudbase-config.js) 中设置：
 
-这样前端 `apiUrl: "/blogApi"` 无需改动。
-
-如果你不走同域路由，而是把 Worker 部署在独立域名，请把 [public/cloudbase-config.js](./public/cloudbase-config.js) 里的 `apiUrl` 改成 Worker 的完整地址（例如 `https://your-worker.workers.dev/blogApi`）。
+- `apiUrl`: 主接口地址
+- `apiFallbackUrls`: 备用接口地址数组（主地址异常时自动回退）
 
 ## 5) CMS 登录
 

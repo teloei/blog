@@ -268,28 +268,85 @@
     setMode(currentMode);
   }
 
+  function resolveApiCandidates() {
+    var candidates = [];
+    var seen = {};
+
+    function addCandidate(value) {
+      var normalized = String(value || "").trim();
+      if (!normalized || seen[normalized]) return;
+      seen[normalized] = true;
+      candidates.push(normalized);
+    }
+
+    addCandidate(config.apiUrl);
+
+    if (Array.isArray(config.apiFallbackUrls)) {
+      config.apiFallbackUrls.forEach(addCandidate);
+    }
+
+    if (!candidates.length) {
+      addCandidate("/blogApi");
+    }
+
+    return candidates;
+  }
+
   // 直接通过 HTTP 触发器调用云函数，无需 SDK 和 access_token
   async function callApi(action, data) {
-    var apiUrl = config.apiUrl;
-    if (!apiUrl) {
-      throw new Error("CloudBase API 尚未配置，请在 cloudbase-config.js 中填写 apiUrl");
-    }
-
+    var apiCandidates = resolveApiCandidates();
     var body = Object.assign({ action: action }, data || {});
+    var lastError = null;
 
-    var response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
+    for (var i = 0; i < apiCandidates.length; i += 1) {
+      var apiUrl = apiCandidates[i];
 
-    var result = await response.json();
+      try {
+        var response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
 
-    if (result.ok === false) {
-      throw new Error(result.message || "请求失败");
+        var raw = await response.text();
+        var result = null;
+
+        try {
+          result = raw ? JSON.parse(raw) : null;
+        } catch (parseError) {
+          result = null;
+        }
+
+        if (!response.ok) {
+          // 远端明确返回业务错误时，直接结束，避免覆盖真实报错（如口令错误）
+          if (result && typeof result === "object" && result.ok === false) {
+            var responseError = new Error(result.message || "请求失败");
+            responseError.isApiBusinessError = true;
+            throw responseError;
+          }
+          throw new Error("HTTP " + response.status);
+        }
+
+        if (!result || typeof result !== "object") {
+          throw new Error("接口响应不是 JSON");
+        }
+
+        if (result.ok === false) {
+          var businessError = new Error(result.message || "请求失败");
+          businessError.isApiBusinessError = true;
+          throw businessError;
+        }
+
+        return result;
+      } catch (error) {
+        if (error && error.isApiBusinessError) {
+          throw error;
+        }
+        lastError = error;
+      }
     }
 
-    return result;
+    throw lastError || new Error("请求失败");
   }
 
   function getFallbackPost(identifier) {
