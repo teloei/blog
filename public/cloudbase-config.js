@@ -3,5 +3,5 @@
   region: "global",
   functionName: "blogApi",
   adminStorageKey: "xiaogai-admin-token",
-  apiUrl: "/blogApi"
+  apiUrl: "https://blog.teloei35.workers.dev/blogApi"
 };
