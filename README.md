@@ -1,5 +1,8 @@
 ﻿# xiaogai.fun 1:1 克隆（Cloudflare Pages + Workers）
 
+完整中文部署步骤见：[DEPLOY_CLOUDFLARE_CN.md](./DEPLOY_CLOUDFLARE_CN.md)
+
+
 这个项目已经按 Cloudflare 部署方式拆分好：
 
 - `public/`：前端静态站点（直接用于 Cloudflare Pages）
