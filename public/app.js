@@ -87,7 +87,7 @@
     var source = String(text || "");
     var output = "";
     var lastIndex = 0;
-    var pattern = /!\[([^\]]*)\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)/g;
+    var pattern = /!\[([^\]]*)\]\s*\(([^)]+)\)|\[([^\]]+)\]\s*\(([^)]+)\)/g;
     var match;
 
     while ((match = pattern.exec(source)) !== null) {
@@ -95,7 +95,7 @@
 
       if (typeof match[1] === "string") {
         var alt = match[1];
-        var imageUrl = sanitizeMarkdownUrl(match[2]);
+        var imageUrl = sanitizeMarkdownUrl((match[2] || "").trim());
         if (imageUrl) {
           output += '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(alt) + '" loading="lazy">';
         } else {
@@ -103,7 +103,7 @@
         }
       } else {
         var label = match[3];
-        var linkUrl = sanitizeMarkdownUrl(match[4]);
+        var linkUrl = sanitizeMarkdownUrl((match[4] || "").trim());
         if (linkUrl) {
           output += '<a href="' + escapeHtml(linkUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(label) + "</a>";
         } else {
@@ -116,6 +116,12 @@
 
     output += escapeHtml(source.slice(lastIndex));
     return output;
+  }
+
+  function normalizeBrokenInlineMarkdown(markdown) {
+    return String(markdown || "")
+      .replace(/!\[([^\]]*)\]\s*\r?\n+\s*\(([^)\r\n]+)\)/g, "![$1]($2)")
+      .replace(/\[([^\]]+)\]\s*\r?\n+\s*\(([^)\r\n]+)\)/g, "[$1]($2)");
   }
 
   function formatDate(value) {
@@ -141,7 +147,8 @@
   }
 
   function markdownToHtml(markdown) {
-    var lines = String(markdown || "").split(/\r?\n/);
+    var normalized = normalizeBrokenInlineMarkdown(markdown);
+    var lines = String(normalized || "").split(/\r?\n/);
     var blocks = [];
     var paragraph = [];
     var quote = [];
