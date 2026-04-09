@@ -3,3 +3,8 @@
 .DS_Store
 npm-debug.log*
 worker/.dev.vars
+
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
