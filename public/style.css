@@ -600,6 +600,14 @@ body.sunny .noise {
   font-size: 15px;
 }
 
+.post-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.9em auto;
+  border-radius: 3px;
+}
+
 .comment-form,
 .stack-form {
   display: grid;

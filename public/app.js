@@ -56,6 +56,68 @@
       .replace(/'/g, "&#39;");
   }
 
+  function sanitizeMarkdownUrl(rawUrl) {
+    var value = String(rawUrl || "").trim();
+    if (!value) return "";
+
+    var lower = value.toLowerCase();
+    if (
+      lower.indexOf("javascript:") === 0 ||
+      lower.indexOf("data:") === 0 ||
+      lower.indexOf("vbscript:") === 0
+    ) {
+      return "";
+    }
+
+    if (
+      value.indexOf("https://") === 0 ||
+      value.indexOf("http://") === 0 ||
+      value.indexOf("//") === 0 ||
+      value.indexOf("/") === 0 ||
+      value.indexOf("./") === 0 ||
+      value.indexOf("../") === 0
+    ) {
+      return value;
+    }
+
+    return "";
+  }
+
+  function renderInlineMarkdown(text) {
+    var source = String(text || "");
+    var output = "";
+    var lastIndex = 0;
+    var pattern = /!\[([^\]]*)\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)/g;
+    var match;
+
+    while ((match = pattern.exec(source)) !== null) {
+      output += escapeHtml(source.slice(lastIndex, match.index));
+
+      if (typeof match[1] === "string") {
+        var alt = match[1];
+        var imageUrl = sanitizeMarkdownUrl(match[2]);
+        if (imageUrl) {
+          output += '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(alt) + '" loading="lazy">';
+        } else {
+          output += escapeHtml(match[0]);
+        }
+      } else {
+        var label = match[3];
+        var linkUrl = sanitizeMarkdownUrl(match[4]);
+        if (linkUrl) {
+          output += '<a href="' + escapeHtml(linkUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(label) + "</a>";
+        } else {
+          output += escapeHtml(match[0]);
+        }
+      }
+
+      lastIndex = pattern.lastIndex;
+    }
+
+    output += escapeHtml(source.slice(lastIndex));
+    return output;
+  }
+
   function formatDate(value) {
     if (!value) return "";
     var date = new Date(value);
@@ -86,13 +148,13 @@
 
     function flushParagraph() {
       if (!paragraph.length) return;
-      blocks.push("<p>" + escapeHtml(paragraph.join(" ")).replace(/\n/g, "<br>") + "</p>");
+      blocks.push("<p>" + renderInlineMarkdown(paragraph.join(" ")).replace(/\n/g, "<br>") + "</p>");
       paragraph = [];
     }
 
     function flushQuote() {
       if (!quote.length) return;
-      blocks.push("<blockquote>" + escapeHtml(quote.join(" ")).replace(/\n/g, "<br>") + "</blockquote>");
+      blocks.push("<blockquote>" + renderInlineMarkdown(quote.join(" ")).replace(/\n/g, "<br>") + "</blockquote>");
       quote = [];
     }
 
