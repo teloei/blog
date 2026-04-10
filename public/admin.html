@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono:wght@400;500&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=2026041002">
+  <link rel="stylesheet" href="./style.css?v=2026041003">
 </head>
 <body data-page="admin" class="light">
   <main class="page page-wide admin-page">
@@ -19,19 +19,19 @@
           <div class="section-title">CMS</div>
           <h1 class="admin-title">忒卷内容后台</h1>
         </div>
-        <a class="subtle-link" href="./index.html">鏌ョ湅鍗氬</a>
+        <a class="subtle-link" href="./index.html">查看博客</a>
       </div>
     </section>
 
     <section id="admin-login-shell" class="section admin-login-shell">
       <div class="panel">
-        <div class="panel-title">绠＄悊鍛樼櫥褰?/div>
+        <div class="panel-title">管理员登录（CMS）</div>
         <form id="admin-login-form" class="stack-form">
           <div class="field-row">
-            <label class="field-label" for="admin-password">鍚庡彴鍙ｄ护</label>
-            <input id="admin-password" name="password" type="password" autocomplete="current-password" placeholder="閮ㄧ讲鏃跺湪浜戝嚱鏁扮幆澧冨彉閲忛噷閰嶇疆">
+            <label class="field-label" for="admin-password">后台口令</label>
+            <input id="admin-password" name="password" type="password" autocomplete="current-password" placeholder="部署时在 Cloudflare 变量/密钥里配置">
           </div>
-          <button class="button" type="submit">杩涘叆鍚庡彴</button>
+          <button class="button" type="submit">进入后台</button>
           <div id="admin-login-feedback" class="feedback"></div>
         </form>
       </div>
@@ -40,13 +40,13 @@
     <section id="admin-shell" class="hidden admin-shell">
       <div class="admin-nav">
         <div class="admin-nav-tabs">
-          <button id="admin-view-comments" class="button button-ghost admin-nav-button is-active" type="button">鐣欒█鍒楄〃</button>
-          <button id="admin-view-posts" class="button button-ghost admin-nav-button" type="button">鏂囩珷鍒楄〃</button>
-          <a id="admin-rednote-link" class="button button-ghost admin-nav-button" href="./rednote/gai.html">灏忕孩涔︾敓鎴?/a>
+          <button id="admin-view-comments" class="button button-ghost admin-nav-button is-active" type="button">留言列表</button>
+          <button id="admin-view-posts" class="button button-ghost admin-nav-button" type="button">文章列表</button>
+          <a id="admin-rednote-link" class="button button-ghost admin-nav-button" href="./rednote/gai.html">小红书生成</a>
         </div>
         <div class="admin-nav-actions">
-          <button id="new-post-button" class="button" type="button">鏂板缓鏂囩珷</button>
-          <button id="logout-button" class="button button-ghost" type="button">閫€鍑?/button>
+          <button id="new-post-button" class="button" type="button">新建文章</button>
+          <button id="logout-button" class="button button-ghost" type="button">退出</button>
         </div>
       </div>
 
@@ -54,17 +54,17 @@
         <div class="panel admin-list-panel">
           <div class="panel-head">
             <div class="panel-title">
-              鏂囩珷鍒楄〃
+              文章列表
               <span id="admin-posts-count" class="admin-count-badge"></span>
             </div>
-            <div class="section-title">鎸夋洿鏂版椂闂村€掑簭</div>
+            <div class="section-title">按更新时间倒序</div>
           </div>
           <div class="admin-toolbar">
-            <input id="admin-post-search" type="search" placeholder="鎼滅储鏍囬銆佹憳瑕併€佹鏂?>
-            <select id="admin-post-sort" aria-label="鏂囩珷鎺掑簭鏂瑰紡">
-              <option value="updatedAt-desc">鏈€杩戜慨鏀?/option>
-              <option value="publishedAt-desc">鏈€杩戝彂甯?/option>
-              <option value="title-asc">鏍囬 A-Z</option>
+            <input id="admin-post-search" type="search" placeholder="搜索标题、摘要、正文">
+            <select id="admin-post-sort" aria-label="文章排序方式">
+              <option value="updatedAt-desc">最近修改</option>
+              <option value="publishedAt-desc">最近发布</option>
+              <option value="title-asc">标题 A-Z</option>
             </select>
           </div>
           <div id="admin-posts-summary" class="admin-summary"></div>
@@ -77,15 +77,15 @@
         <div class="panel admin-comments-panel">
           <div class="panel-head">
             <div class="panel-title">
-              鐣欒█鍒楄〃
+              留言列表
               <span id="admin-comments-count" class="admin-count-badge"></span>
             </div>
-            <div class="section-title">鎸夋椂闂村€掑簭</div>
+            <div class="section-title">按时间倒序</div>
           </div>
           <div class="admin-toolbar admin-toolbar-comments">
-            <input id="admin-comment-search" type="search" placeholder="鎼滅储鐣欒█浜恒€佸唴瀹广€佹枃绔犲悕">
-            <select id="admin-comment-post-filter" aria-label="鎸夋枃绔犵瓫閫夌暀瑷€">
-              <option value="all">鍏ㄩ儴鏂囩珷</option>
+            <input id="admin-comment-search" type="search" placeholder="搜索留言人、内容、文章名">
+            <select id="admin-comment-post-filter" aria-label="按文章筛选留言">
+              <option value="all">全部文章</option>
             </select>
           </div>
           <div id="admin-comments-summary" class="admin-summary"></div>
@@ -99,10 +99,10 @@
         <div class="panel admin-editor-panel">
           <div class="panel-head">
             <div>
-              <div class="panel-title" id="post-form-title">鏂板缓鏂囩珷</div>
-              <div class="section-title" id="post-form-subtitle">鍙渶瑕佸～鍐欐爣棰樺拰姝ｆ枃</div>
+              <div class="panel-title" id="post-form-title">新建文章</div>
+              <div class="section-title" id="post-form-subtitle">只需要填写标题和正文</div>
             </div>
-            <button id="cancel-post-edit" class="button button-ghost" type="button">杩斿洖鍒楄〃</button>
+            <button id="cancel-post-edit" class="button button-ghost" type="button">返回列表</button>
           </div>
           <form id="post-form" class="stack-form">
             <input id="post-id" type="hidden" name="id">
@@ -110,28 +110,28 @@
             <input id="post-excerpt" type="hidden" name="excerpt">
             <input id="post-published-at" type="hidden" name="publishedAt">
             <div class="field-row">
-              <label class="field-label" for="post-title">鏍囬</label>
+              <label class="field-label" for="post-title">标题</label>
               <input id="post-title-input" name="title" maxlength="80" required>
             </div>
             <div class="field-row">
-              <label class="field-label" for="post-content-input">姝ｆ枃</label>
+              <label class="field-label" for="post-content-input">正文</label>
               <div class="editor-toolbar">
-                <label class="editor-toolbar-btn" title="鎻掑叆鍥剧墖">
+                <label class="editor-toolbar-btn" title="插入图片">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                  鎻掑叆鍥剧墖
+                  插入图片
                   <input id="image-upload-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
                 </label>
-                <button id="insert-video-template" class="editor-toolbar-btn" type="button">
+                <button id="insert-video-template" class="editor-toolbar-btn" type="button" title="插入视频">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="15" height="14" rx="2"/><polygon points="17 10 22 7 22 17 17 14"/></svg>
-                  鎻掑叆瑙嗛
+                  插入视频
                 </button>
                 <span id="image-upload-status" class="editor-toolbar-status"></span>
               </div>
               <textarea id="post-content-input" name="content" rows="18" required placeholder="支持 Markdown。图片：![描述](url)，视频：@[video](url)，引用：> 开头，空行分段。"></textarea>
             </div>
             <div class="form-actions">
-              <button id="post-submit-button" class="button" type="submit">鍙戝竷鏂囩珷</button>
-              <button id="seed-posts-button" class="button button-secondary" type="button">瀵煎叆绀轰緥鏂囩珷</button>
+              <button id="post-submit-button" class="button" type="submit">发布文章</button>
+              <button id="seed-posts-button" class="button button-secondary" type="button">导入示例文章</button>
             </div>
             <div id="post-form-feedback" class="feedback"></div>
           </form>
@@ -141,20 +141,16 @@
   </main>
 
   <script src="./cloudbase-config.js"></script>
-  <script src="./app.js?v=2026041002"></script>
+  <script src="./app.js?v=2026041003"></script>
 
-  <!-- 鑷畾涔夌‘璁ゅ脊绐?-->
   <div id="confirm-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal-card">
       <p id="confirm-modal-message" class="modal-message"></p>
       <div class="modal-actions">
-        <button id="confirm-modal-cancel" class="button button-ghost" type="button">鍙栨秷</button>
-        <button id="confirm-modal-ok" class="button button-danger" type="button">纭畾鍒犻櫎</button>
+        <button id="confirm-modal-cancel" class="button button-ghost" type="button">取消</button>
+        <button id="confirm-modal-ok" class="button button-danger" type="button">确定删除</button>
       </div>
     </div>
   </div>
 </body>
 </html>
-
-
-
