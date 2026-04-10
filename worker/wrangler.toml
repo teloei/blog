@@ -1,4 +1,4 @@
-﻿name = "xiaogai-blog-api"
+﻿name = "blog"
 main = "src/index.js"
 compatibility_date = "2026-04-08"
 
@@ -22,4 +22,5 @@ ADMIN_TOKEN_TTL_DAYS = "30"
 # SITE_URL = "https://your-domain.com"
 # 可选：图片公网前缀（例如 https://pub-xxx.r2.dev）
 # R2_PUBLIC_URL = "https://pub-xxx.r2.dev"
+
 
