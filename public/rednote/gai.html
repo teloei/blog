@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>笔记编辑和导出</title>
+    <title>绗旇缂栬緫鍜屽鍑?/title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
-            --xhs-font-stack: "思源宋体 CN", "Source Han Serif CN", "Source Han Serif SC", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", serif;
+            --xhs-font-stack: "鎬濇簮瀹嬩綋 CN", "Source Han Serif CN", "Source Han Serif SC", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", serif;
         }
 
         * {
@@ -103,7 +103,7 @@
             display: flex;
         }
 
-        /* ========== 样式1: 笔记编辑和导出 ========== */
+        /* ========== 鏍峰紡1: 绗旇缂栬緫鍜屽鍑?========== */
         .container {
             display: flex;
             width: 100%;
@@ -376,7 +376,7 @@
             background: #0077ed;
         }
 
-        /* ========== 样式2: 内容编辑器 ========== */
+        /* ========== 鏍峰紡2: 鍐呭缂栬緫鍣?========== */
         .preview-section {
             width: 50%;
             padding: 20px;
@@ -502,7 +502,7 @@
         }
 
         .preview-text ul li::before {
-            content: "•";
+            content: "鈥?;
             position: absolute;
             left: -80px;
             font-size: 100px;
@@ -549,7 +549,7 @@
             }
         }
 
-        /* 导出时隐藏安全线 */
+        /* 瀵煎嚭鏃堕殣钘忓畨鍏ㄧ嚎 */
         .exporting .preview-content::after,
         .exporting .preview-content-2::after {
             display: none;
@@ -559,7 +559,7 @@
 <body>
     <div id="auth-overlay">
         <div class="spinner"></div>
-        <p>验证身份中…</p>
+        <p>楠岃瘉韬唤涓€?/p>
     </div>
     <style>
     #auth-overlay {
@@ -613,12 +613,12 @@
     </script>
     <div id="fontWarning" class="font-warning"></div>
     <div class="tab-buttons">
-        <button class="tab-btn active" onclick="switchTab(0)">封面</button>
-        <button class="tab-btn" onclick="switchTab(1)">正文</button>
+        <button class="tab-btn active" onclick="switchTab(0)">灏侀潰</button>
+        <button class="tab-btn" onclick="switchTab(1)">姝ｆ枃</button>
     </div>
 
     <div class="content-wrapper">
-        <!-- 标签页 1: 笔记编辑和导出 -->
+        <!-- 鏍囩椤?1: 绗旇缂栬緫鍜屽鍑?-->
         <div class="tab-content active" id="tab-0">
             <div class="container">
                 <div class="preview-container">
@@ -626,7 +626,7 @@
                         <div class="header">
                             <div class="avatar" id="avatarContainer"><img id="avatarImg" src="./img/xg.jpg"></div>
                             <div class="info">
-                                <div class="name">小盖</div>
+                                <div class="name">忒卷</div>
                                 <div class="date" id="dateDisplay"></div>
                             </div>
                         </div>
@@ -635,27 +635,27 @@
                 </div>
 
                 <div class="editor-container">
-                    <div class="editor-title">编辑笔记内容</div>
+                    <div class="editor-title">缂栬緫绗旇鍐呭</div>
 
                     <div class="form-group avatar-upload">
-                        <label>头像</label>
+                        <label>澶村儚</label>
                         <input type="file" id="avatarInput" accept="image/*">
                     </div>
 
                     <div class="form-group">
-                        <label for="contentInput">笔记内容</label>
-                        <textarea id="contentInput" placeholder="在这里输入你的笔记内容..."></textarea>
+                        <label for="contentInput">绗旇鍐呭</label>
+                        <textarea id="contentInput" placeholder="鍦ㄨ繖閲岃緭鍏ヤ綘鐨勭瑪璁板唴瀹?.."></textarea>
                     </div>
 
                     <div class="button-group">
-                        <button class="submit-btn" onclick="submitContent()">预览</button>
-                        <button class="export-btn" onclick="exportAsImage()">导出</button>
+                        <button class="submit-btn" onclick="submitContent()">棰勮</button>
+                        <button class="export-btn" onclick="exportAsImage()">瀵煎嚭</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 标签页 2: 内容编辑器 -->
+        <!-- 鏍囩椤?2: 鍐呭缂栬緫鍣?-->
         <div class="tab-content" id="tab-1">
             <div class="container">
                 <div class="preview-section">
@@ -665,14 +665,14 @@
                 </div>
 
                 <div class="editor-section">
-                    <div class="editor-title">编辑内容</div>
+                    <div class="editor-title">缂栬緫鍐呭</div>
                     <div class="form-group">
-                        <label for="contentInput2">内容</label>
-                        <textarea id="contentInput2" placeholder="输入内容，支持Markdown语法"></textarea>
+                        <label for="contentInput2">鍐呭</label>
+                        <textarea id="contentInput2" placeholder="杈撳叆鍐呭锛屾敮鎸丮arkdown璇硶"></textarea>
                     </div>
                     <div class="button-group">
-                        <button class="submit-btn" onclick="submitContent2()">预览</button>
-                        <button class="export-btn" onclick="exportAsImage2()">导出</button>
+                        <button class="submit-btn" onclick="submitContent2()">棰勮</button>
+                        <button class="export-btn" onclick="exportAsImage2()">瀵煎嚭</button>
                     </div>
                 </div>
             </div>
@@ -683,8 +683,7 @@
     <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js"></script>
 
     <script>
-        // 标签页切换
-        function switchTab(tabIndex) {
+        // 鏍囩椤靛垏鎹?        function switchTab(tabIndex) {
             const tabs = document.querySelectorAll('.tab-content');
             const btns = document.querySelectorAll('.tab-btn');
             
@@ -696,13 +695,13 @@
         }
 
         const preferredFonts = [
-            '思源宋体 CN',
+            '鎬濇簮瀹嬩綋 CN',
             'Source Han Serif CN',
             'Source Han Serif SC'
         ];
 
         function isFontAvailable(fontName) {
-            const text = 'Aa中午测试123';
+            const text = 'Aa涓崍娴嬭瘯123';
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             if (!context) return false;
@@ -737,7 +736,7 @@
                 return;
             }
 
-            warning.textContent = '当前电脑未检测到指定字体（思源宋体 CN / Source Han Serif），页面会回退到系统衬线字体，导出的排版可能和预期不一致。';
+            warning.textContent = '褰撳墠鐢佃剳鏈娴嬪埌鎸囧畾瀛椾綋锛堟€濇簮瀹嬩綋 CN / Source Han Serif锛夛紝椤甸潰浼氬洖閫€鍒扮郴缁熻‖绾垮瓧浣擄紝瀵煎嚭鐨勬帓鐗堝彲鑳藉拰棰勬湡涓嶄竴鑷淬€?;
             warning.classList.add('visible');
         }
 
@@ -746,9 +745,9 @@
             twemoji.parse(root, { folder: 'svg', ext: '.svg' });
         }
 
-        // ========== 样式1的脚本 ==========
-        const punctuationMarks = /^[，。！？；：·…—「」『』（）、'"]/;
-        const openingQuotes = /^["「『]/;
+        // ========== 鏍峰紡1鐨勮剼鏈?==========
+        const punctuationMarks = /^[锛屻€傦紒锛燂紱锛毬封€︹€斻€屻€嶃€庛€忥紙锛夈€?"]/;
+        const openingQuotes = /^["銆屻€嶿/;
 
         function setCurrentDate() {
             const today = new Date();
@@ -857,14 +856,14 @@
                 applyUniformJustifyToCoverParagraphs();
                 protectCoverNonBreakingUnits();
             } else {
-                showToast('请输入内容', 'error');
+                showToast('璇疯緭鍏ュ唴瀹?, 'error');
             }
         }
 
         function processParagraph(lines) {
             let text = lines.join('\n').trim();
 
-            text = text.replace(/([，。！？；：·…—「」『』（）、'"]+)([""「『]+)/g,
+            text = text.replace(/([锛屻€傦紒锛燂紱锛毬封€︹€斻€屻€嶃€庛€忥紙锛夈€?"]+)([""銆屻€嶿+)/g,
                 '$1<span class="quote-space"></span>$2');
 
             text = fixPunctuation(text);
@@ -951,10 +950,10 @@
         function tokenizeCoverText(text) {
             const tokens = [];
             const source = (text || '').replace(/\s+/g, ' ');
-            const percentToken = /\d+(?:\.\d+)?\s*[%％]/y;
+            const percentToken = /\d+(?:\.\d+)?\s*[%锛匽/y;
             const englishWord = /[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/y;
-            const ellipsisToken = /…{2,}/y;
-            const disallowedLineStart = /[，。！？；：、,.!?;:）\)\]】》」』”’]/;
+            const ellipsisToken = /鈥2,}/y;
+            const disallowedLineStart = /[锛屻€傦紒锛燂紱锛氥€?.!?;:锛塡)\]銆戙€嬨€嶃€忊€濃€橾/;
             let i = 0;
 
             while (i < source.length) {
@@ -1009,7 +1008,7 @@
         }
 
         function wrapCoverProtectedText(root) {
-            const pattern = /[^\s]…{2,}|\d+(?:\.\d+)?\s*[%％]|…{2,}/g;
+            const pattern = /[^\s]鈥2,}|\d+(?:\.\d+)?\s*[%锛匽|鈥2,}/g;
             const textNodes = [];
             const walker = document.createTreeWalker(
                 root,
@@ -1075,10 +1074,9 @@
             const previewContent = document.getElementById('previewContent');
             const originalTransform = previewContent.style.transform;
 
-            // 添加exporting类来隐藏安全线
-            document.body.classList.add('exporting');
+            // 娣诲姞exporting绫绘潵闅愯棌瀹夊叏绾?            document.body.classList.add('exporting');
 
-            // 临时移除缩放，用原始尺寸导出
+            // 涓存椂绉婚櫎缂╂斁锛岀敤鍘熷灏哄瀵煎嚭
             previewContent.style.transform = 'scale(1)';
 
             try {
@@ -1092,33 +1090,31 @@
                     scale: 1
                 });
 
-                // 创建一个新的canvas，确保尺寸正好是1080x1440
+                // 鍒涘缓涓€涓柊鐨刢anvas锛岀‘淇濆昂瀵告濂芥槸1080x1440
                 const finalCanvas = document.createElement('canvas');
                 finalCanvas.width = 1080;
                 finalCanvas.height = 1440;
                 const ctx = finalCanvas.getContext('2d');
                 
-                // 填充背景色
-                ctx.fillStyle = '#f9faf5';
+                // 濉厖鑳屾櫙鑹?                ctx.fillStyle = '#f9faf5';
                 ctx.fillRect(0, 0, 1080, 1440);
                 
-                // 绘制原始内容
+                // 缁樺埗鍘熷鍐呭
                 ctx.drawImage(canvas, 0, 0);
 
                 const link = document.createElement('a');
                 link.href = finalCanvas.toDataURL('image/png');
-                link.download = `笔记_${new Date().getTime()}.png`;
+                link.download = `绗旇_${new Date().getTime()}.png`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
 
-                showToast('导出成功', 'success');
+                showToast('瀵煎嚭鎴愬姛', 'success');
             } catch (error) {
-                console.error('导出失败:', error);
-                showToast('导出失败：' + error.message, 'error');
+                console.error('瀵煎嚭澶辫触:', error);
+                showToast('瀵煎嚭澶辫触锛? + error.message, 'error');
             } finally {
-                // 恢复缩放和移除exporting类
-                if (previewContent) previewContent.style.transform = originalTransform;
+                // 鎭㈠缂╂斁鍜岀Щ闄xporting绫?                if (previewContent) previewContent.style.transform = originalTransform;
                 if (document.body) document.body.classList.remove('exporting');
             }
         }
@@ -1131,13 +1127,13 @@
 
         setCurrentDate();
 
-        // ========== 样式2的脚本 ==========
+        // ========== 鏍峰紡2鐨勮剼鏈?==========
         function normalizeCjkSpacing(text) {
             return text
                 .replace(/[\u00A0\u3000]/g, ' ')
                 .replace(/([\u4e00-\u9fff])\s+(?=[\u4e00-\u9fff])/g, '$1')
-                .replace(/([\u4e00-\u9fff])\s+(?=[，。！？；：、])/g, '$1')
-                .replace(/([，。！？；：、])\s+(?=[\u4e00-\u9fff])/g, '$1')
+                .replace(/([\u4e00-\u9fff])\s+(?=[锛屻€傦紒锛燂紱锛氥€乚)/g, '$1')
+                .replace(/([锛屻€傦紒锛燂紱锛氥€乚)\s+(?=[\u4e00-\u9fff])/g, '$1')
                 .replace(/([\u4e00-\u9fff])\s+(?=[A-Za-z0-9])/g, '$1 ')
                 .replace(/([A-Za-z0-9])\s+(?=[\u4e00-\u9fff])/g, '$1 ');
         }
@@ -1158,8 +1154,7 @@
             renderEmoji(document.getElementById('previewText'));
             applyUniformJustifyToParagraphs();
             
-            // 处理标点符号不能在行首
-            movePunctuationFromLineStart();
+            // 澶勭悊鏍囩偣绗﹀彿涓嶈兘鍦ㄨ棣?            movePunctuationFromLineStart();
             alignLinkParagraphsLeft();
             protectBodyNonBreakingUnits();
         }
@@ -1259,24 +1254,22 @@
             
             let node;
             while (node = walker.nextNode()) {
-                if (node.classList.contains('punctuation') && node.dataset.punctuation !== '，') {
-                    // 检查这个标点是否在行首
+                if (node.classList.contains('punctuation') && node.dataset.punctuation !== '锛?) {
+                    // 妫€鏌ヨ繖涓爣鐐规槸鍚﹀湪琛岄
                     const prevNode = node.previousSibling;
                     if (!prevNode || (prevNode.nodeType === Node.TEXT_NODE && /\n$/.test(prevNode.textContent))) {
-                        // 尝试找到前一个非空白字符，将标点移到它后面
-                        let current = node.previousSibling;
+                        // 灏濊瘯鎵惧埌鍓嶄竴涓潪绌虹櫧瀛楃锛屽皢鏍囩偣绉诲埌瀹冨悗闈?                        let current = node.previousSibling;
                         while (current) {
                             if (current.nodeType === Node.TEXT_NODE) {
                                 const text = current.textContent;
                                 if (text.trim()) {
-                                    // 找到了前面的文字，把标点移过去
-                                    const punct = node.textContent;
+                                    // 鎵惧埌浜嗗墠闈㈢殑鏂囧瓧锛屾妸鏍囩偣绉昏繃鍘?                                    const punct = node.textContent;
                                     current.textContent = text + punct;
                                     node.parentNode.removeChild(node);
                                     break;
                                 }
                             } else if (current.nodeType === Node.ELEMENT_NODE) {
-                                // 如果是元素节点，尝试从其最后一个子节点继续
+                                // 濡傛灉鏄厓绱犺妭鐐癸紝灏濊瘯浠庡叾鏈€鍚庝竴涓瓙鑺傜偣缁х画
                                 if (current.lastChild && current.lastChild.nodeType === Node.TEXT_NODE) {
                                     const text = current.lastChild.textContent;
                                     if (text.trim()) {
@@ -1309,10 +1302,9 @@
             const exportContainer = document.getElementById('exportContainer');
             const originalTransform = exportContainer.style.transform;
 
-            // 添加exporting类来隐藏安全线
-            document.body.classList.add('exporting');
+            // 娣诲姞exporting绫绘潵闅愯棌瀹夊叏绾?            document.body.classList.add('exporting');
 
-            // 临时移除缩放，用原始尺寸导出
+            // 涓存椂绉婚櫎缂╂斁锛岀敤鍘熷灏哄瀵煎嚭
             exportContainer.style.transform = 'scale(1)';
 
             try {
@@ -1327,17 +1319,16 @@
                     height: 1440
                 });
 
-                // 创建一个新的canvas，确保尺寸正好是1080x1440
+                // 鍒涘缓涓€涓柊鐨刢anvas锛岀‘淇濆昂瀵告濂芥槸1080x1440
                 const finalCanvas = document.createElement('canvas');
                 finalCanvas.width = 1080;
                 finalCanvas.height = 1440;
                 const ctx = finalCanvas.getContext('2d');
                 
-                // 填充背景色
-                ctx.fillStyle = '#f9faf5';
+                // 濉厖鑳屾櫙鑹?                ctx.fillStyle = '#f9faf5';
                 ctx.fillRect(0, 0, 1080, 1440);
                 
-                // 绘制原始内容
+                // 缁樺埗鍘熷鍐呭
                 ctx.drawImage(canvas, 0, 0);
 
                 const link = document.createElement('a');
@@ -1345,10 +1336,10 @@
                 link.href = finalCanvas.toDataURL('image/png');
                 link.click();
 
-                showToast('导出成功', 'success');
+                showToast('瀵煎嚭鎴愬姛', 'success');
             } catch (error) {
-                console.error('导出失败:', error);
-                showToast('导出失败：' + error.message, 'error');
+                console.error('瀵煎嚭澶辫触:', error);
+                showToast('瀵煎嚭澶辫触锛? + error.message, 'error');
             } finally {
                 if (exportContainer) exportContainer.style.transform = originalTransform;
                 if (document.body) document.body.classList.remove('exporting');
@@ -1367,3 +1358,5 @@
     </script>
 </body>
 </html>
+
+

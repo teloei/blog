@@ -9,16 +9,17 @@ compatibility_date = "2026-04-08"
 [[d1_databases]]
 binding = "DB"
 database_name = "xiaogai-blog"
-database_id = "747c1f9d-b5d4-4375-b97b-07ed402c2822"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
 
 [[r2_buckets]]
 binding = "UPLOADS_BUCKET"
 bucket_name = "xiaogai-blog-uploads"
 
 [vars]
-SITE_TITLE = "小盖"
+SITE_TITLE = "忒卷"
 ADMIN_TOKEN_TTL_DAYS = "30"
 # 可选：固定 RSS 和图片生成的站点地址（例如 https://your-domain.com）
 # SITE_URL = "https://your-domain.com"
 # 可选：图片公网前缀（例如 https://pub-xxx.r2.dev）
 # R2_PUBLIC_URL = "https://pub-xxx.r2.dev"
+

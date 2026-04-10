@@ -187,7 +187,7 @@ async function handleCreateComment(payload, _request, env) {
   assert(content, "内容不能为空");
 
   const author = isAdmin
-    ? "小盖"
+    ? "忒卷"
     : sanitizeText(payload.author, 24);
 
   assert(author, "名字不能为空");
@@ -555,7 +555,7 @@ async function handleGetRss(request, env) {
     .all();
 
   const posts = (result.results || []).map(mapPostRow);
-  const siteTitle = String(env.SITE_TITLE || "小盖");
+  const siteTitle = String(env.SITE_TITLE || "忒卷");
   const baseUrl = getSiteBaseUrl(request, env);
   const channelLink = `${baseUrl}/`;
 
@@ -1024,3 +1024,4 @@ function getForwardedSiteOrigin(request) {
     return "";
   }
 }
+

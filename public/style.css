@@ -589,8 +589,41 @@ body.sunny .noise {
 .post-content p + p,
 .post-content p + blockquote,
 .post-content blockquote + p,
-.post-content blockquote + blockquote {
+.post-content blockquote + blockquote,
+.post-content h1 + p,
+.post-content h2 + p,
+.post-content h3 + p,
+.post-content p + ul,
+.post-content p + ol,
+.post-content ul + p,
+.post-content ol + p,
+.post-content pre + p,
+.post-content p + pre {
   margin-top: 1.05em;
+}
+
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4 {
+  color: var(--text);
+  line-height: 1.45;
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+}
+
+.post-content h1 { font-size: 1.7em; }
+.post-content h2 { font-size: 1.45em; }
+.post-content h3 { font-size: 1.25em; }
+.post-content h4 { font-size: 1.1em; }
+
+.post-content ul,
+.post-content ol {
+  padding-left: 1.4em;
+}
+
+.post-content li + li {
+  margin-top: 0.35em;
 }
 
 .post-content blockquote {
@@ -606,6 +639,40 @@ body.sunny .noise {
   height: auto;
   margin: 0.9em auto;
   border-radius: 3px;
+}
+
+.post-content .post-video,
+.post-content .post-video-frame {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 1em auto;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #000;
+  aspect-ratio: 16 / 9;
+}
+
+.post-content .post-video-frame {
+  min-height: 280px;
+}
+
+.post-content pre {
+  margin: 1em 0;
+  padding: 0.9em 1em;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--surface-strong) 85%, #000);
+}
+
+.post-content code {
+  font-family: "Fragment Mono", monospace;
+  font-size: 0.9em;
+}
+
+.post-content pre code {
+  font-size: 0.85em;
 }
 
 .comment-form,
@@ -1291,6 +1358,10 @@ kbd {
     line-height: 1.42;
   }
 
+  .post-content .post-video-frame {
+    min-height: 220px;
+  }
+
   .post-shell {
     padding: 20px 16px 24px;
   }
@@ -1428,5 +1499,9 @@ kbd {
   .mode-indicator {
     top: 12px;
     right: 14px;
+  }
+
+  .post-content .post-video-frame {
+    min-height: 200px;
   }
 }

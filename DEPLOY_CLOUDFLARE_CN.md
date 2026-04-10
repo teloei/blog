@@ -69,7 +69,7 @@
 在 `Variables and Secrets`：
 
 普通变量（Variables）：
-- `SITE_TITLE = 小盖`
+- `SITE_TITLE = 忒卷`
 - `ADMIN_TOKEN_TTL_DAYS = 30`
 - `SITE_URL = https://blog.03518888.xyz`
 

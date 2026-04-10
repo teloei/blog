@@ -75,7 +75,9 @@
       value.indexOf("//") === 0 ||
       value.indexOf("/") === 0 ||
       value.indexOf("./") === 0 ||
-      value.indexOf("../") === 0
+      value.indexOf("../") === 0 ||
+      lower.indexOf("mailto:") === 0 ||
+      lower.indexOf("tel:") === 0
     ) {
       return value;
     }
@@ -83,29 +85,81 @@
     return "";
   }
 
+  function isVideoUrl(url) {
+    return /\.(mp4|webm|ogg|mov|m4v)(?:$|[?#])/i.test(String(url || ""));
+  }
+
+  function renderInlineText(text) {
+    return escapeHtml(String(text || ""))
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^\n*][\s\S]*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*([^\n*][^*]*?)\*/g, "<em>$1</em>")
+      .replace(/~~([^\n~][^~]*?)~~/g, "<del>$1</del>");
+  }
+
+  function renderVideoEmbed(url, title) {
+    var safeUrl = sanitizeMarkdownUrl(url);
+    if (!safeUrl) return "";
+
+    if (isVideoUrl(safeUrl)) {
+      return [
+        '<video class="post-video" controls playsinline preload="metadata" src="',
+        escapeHtml(safeUrl),
+        '"',
+        title ? ' title="' + escapeHtml(title) + '"' : "",
+        "></video>"
+      ].join("");
+    }
+
+    if (!/^(https?:)?\/\//i.test(safeUrl)) {
+      return "";
+    }
+
+    return [
+      '<iframe class="post-video-frame" src="',
+      escapeHtml(safeUrl),
+      '" title="',
+      escapeHtml(title || "视频播放器"),
+      '" loading="lazy" referrerpolicy="no-referrer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>'
+    ].join("");
+  }
+
   function renderInlineMarkdown(text) {
     var source = String(text || "");
     var output = "";
     var lastIndex = 0;
-    var pattern = /!\[([^\]]*)\]\s*\(([^)]+)\)|\[([^\]]+)\]\s*\(([^)]+)\)/g;
+    var pattern = /@\[video\]\s*\(([^)]+)\)|!\[([^\]]*)\]\s*\(([^)]+)\)|\[([^\]]+)\]\s*\(([^)]+)\)/gi;
     var match;
 
     while ((match = pattern.exec(source)) !== null) {
-      output += escapeHtml(source.slice(lastIndex, match.index));
+      output += renderInlineText(source.slice(lastIndex, match.index));
 
-      if (typeof match[1] === "string") {
-        var alt = match[1];
-        var imageUrl = sanitizeMarkdownUrl((match[2] || "").trim());
-        if (imageUrl) {
+      if (typeof match[1] === "string" && match[1] !== "") {
+        var videoUrl = (match[1] || "").trim();
+        var videoHtml = renderVideoEmbed(videoUrl, "内嵌视频");
+        if (videoHtml) {
+          output += videoHtml;
+        } else {
+          output += escapeHtml(match[0]);
+        }
+      } else if (typeof match[2] === "string") {
+        var alt = match[2];
+        var imageUrl = sanitizeMarkdownUrl((match[3] || "").trim());
+        if (imageUrl && isVideoUrl(imageUrl)) {
+          var mediaHtml = renderVideoEmbed(imageUrl, alt || "视频");
+          output += mediaHtml || escapeHtml(match[0]);
+        } else if (imageUrl) {
           output += '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(alt) + '" loading="lazy">';
         } else {
           output += escapeHtml(match[0]);
         }
       } else {
-        var label = match[3];
-        var linkUrl = sanitizeMarkdownUrl((match[4] || "").trim());
+        var label = match[4];
+        var linkUrl = sanitizeMarkdownUrl((match[5] || "").trim());
         if (linkUrl) {
-          output += '<a href="' + escapeHtml(linkUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(label) + "</a>";
+          var external = /^(https?:)?\/\//i.test(linkUrl);
+          var attrs = external ? ' target="_blank" rel="noopener noreferrer"' : "";
+          output += '<a href="' + escapeHtml(linkUrl) + '"' + attrs + ">" + escapeHtml(label) + "</a>";
         } else {
           output += escapeHtml(match[0]);
         }
@@ -114,12 +168,13 @@
       lastIndex = pattern.lastIndex;
     }
 
-    output += escapeHtml(source.slice(lastIndex));
+    output += renderInlineText(source.slice(lastIndex));
     return output;
   }
 
   function normalizeBrokenInlineMarkdown(markdown) {
     return String(markdown || "")
+      .replace(/@\[video\]\s*\r?\n+\s*\(([^)\r\n]+)\)/gi, "@[video]($1)")
       .replace(/!\[([^\]]*)\]\s*\r?\n+\s*\(([^)\r\n]+)\)/g, "![$1]($2)")
       .replace(/\[([^\]]+)\]\s*\r?\n+\s*\(([^)\r\n]+)\)/g, "[$1]($2)");
   }
@@ -152,46 +207,126 @@
     var blocks = [];
     var paragraph = [];
     var quote = [];
+    var listItems = [];
+    var listType = "";
+    var codeFence = [];
+    var inCodeFence = false;
 
     function flushParagraph() {
       if (!paragraph.length) return;
-      blocks.push("<p>" + renderInlineMarkdown(paragraph.join(" ")).replace(/\n/g, "<br>") + "</p>");
+      blocks.push("<p>" + renderInlineMarkdown(paragraph.join("\n")).replace(/\n/g, "<br>") + "</p>");
       paragraph = [];
     }
 
     function flushQuote() {
       if (!quote.length) return;
-      blocks.push("<blockquote>" + renderInlineMarkdown(quote.join(" ")).replace(/\n/g, "<br>") + "</blockquote>");
+      blocks.push("<blockquote>" + renderInlineMarkdown(quote.join("\n")).replace(/\n/g, "<br>") + "</blockquote>");
       quote = [];
+    }
+
+    function flushList() {
+      if (!listItems.length) return;
+      var tag = listType || "ul";
+      blocks.push("<" + tag + ">" + listItems.map(function (item) {
+        return "<li>" + renderInlineMarkdown(item) + "</li>";
+      }).join("") + "</" + tag + ">");
+      listItems = [];
+      listType = "";
+    }
+
+    function flushCodeFence() {
+      if (!codeFence.length) return;
+      blocks.push("<pre><code>" + escapeHtml(codeFence.join("\n")) + "</code></pre>");
+      codeFence = [];
+    }
+
+    function flushFlowBlocks() {
+      flushParagraph();
+      flushQuote();
+      flushList();
     }
 
     lines.forEach(function (line) {
       var trimmed = line.trim();
+
+      if (inCodeFence) {
+        if (/^```/.test(trimmed)) {
+          inCodeFence = false;
+          flushCodeFence();
+        } else {
+          codeFence.push(line);
+        }
+        return;
+      }
+
+      if (/^```/.test(trimmed)) {
+        flushFlowBlocks();
+        inCodeFence = true;
+        codeFence = [];
+        return;
+      }
+
       if (!trimmed) {
-        flushParagraph();
-        flushQuote();
+        flushFlowBlocks();
+        return;
+      }
+
+      var headingMatch = /^(#{1,6})\s+(.*)$/.exec(trimmed);
+      if (headingMatch) {
+        flushFlowBlocks();
+        var level = headingMatch[1].length;
+        blocks.push("<h" + level + ">" + renderInlineMarkdown(headingMatch[2]) + "</h" + level + ">");
+        return;
+      }
+
+      if (/^(-{3,}|_{3,}|\*{3,})$/.test(trimmed)) {
+        flushFlowBlocks();
+        blocks.push("<hr>");
         return;
       }
 
       if (trimmed.indexOf(">") === 0) {
         flushParagraph();
+        flushList();
         quote.push(trimmed.replace(/^>\s?/, ""));
         return;
       }
 
+      var unorderedListMatch = /^[-*+]\s+(.*)$/.exec(trimmed);
+      var orderedListMatch = /^\d+\.\s+(.*)$/.exec(trimmed);
+      if (unorderedListMatch || orderedListMatch) {
+        flushParagraph();
+        flushQuote();
+        var nextType = orderedListMatch ? "ol" : "ul";
+        if (listType && listType !== nextType) {
+          flushList();
+        }
+        listType = nextType;
+        listItems.push((orderedListMatch || unorderedListMatch)[1]);
+        return;
+      }
+
       flushQuote();
+      flushList();
       paragraph.push(trimmed);
     });
 
-    flushParagraph();
-    flushQuote();
+    if (inCodeFence) {
+      flushCodeFence();
+    }
+    flushFlowBlocks();
 
     return blocks.join("");
   }
 
   function excerptFromContent(content) {
     var plain = String(content || "")
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/@\[video\]\(([^)]+)\)/gi, " ")
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, "$1 ")
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 ")
       .replace(/^>\s?/gm, "")
+      .replace(/[>#*_`~-]/g, " ")
       .replace(/\s+/g, " ")
       .trim();
     var maxLength = 90;
@@ -481,7 +616,56 @@
     });
   }
 
+  function resolveConnectLinks() {
+    var fallbackLinks = [
+      { label: "RSS", href: "/blogApi?action=getRss" },
+      { label: "小红书", href: "https://www.xiaohongshu.com/user/profile/61ec2a3a000000001000868f", target: "_blank" },
+      { label: "邮箱", href: "mailto:gainubi@gmail.com" },
+      { label: "GitHub", href: "https://github.com/", target: "_blank" },
+      { label: "哔哩哔哩", href: "https://space.bilibili.com/", target: "_blank" }
+    ];
+
+    var rawLinks = Array.isArray(config.connectLinks) && config.connectLinks.length
+      ? config.connectLinks
+      : fallbackLinks;
+
+    return rawLinks
+      .map(function (item) {
+        if (!item || typeof item !== "object") return null;
+        var label = String(item.label || "").trim();
+        var href = sanitizeMarkdownUrl(item.href || item.url || "");
+        if (!label || !href) return null;
+
+        var target = String(item.target || "").trim();
+        if (!target && /^(https?:)?\/\//i.test(href)) {
+          target = "_blank";
+        }
+
+        return { label: label, href: href, target: target };
+      })
+      .filter(Boolean);
+  }
+
+  function renderConnectLinks() {
+    var container = document.getElementById("connect-links");
+    if (!container) return;
+
+    var links = resolveConnectLinks();
+    container.innerHTML = links.map(function (item) {
+      var attrs = "";
+      if (item.target) {
+        attrs += ' target="' + escapeHtml(item.target) + '"';
+      }
+      if (item.target === "_blank") {
+        attrs += ' rel="noopener noreferrer"';
+      }
+      return '<a href="' + escapeHtml(item.href) + '"' + attrs + ">" + escapeHtml(item.label) + "</a>";
+    }).join("");
+  }
+
   async function initHomePage() {
+    renderConnectLinks();
+
     var pageSize = 10;
     var params = new URLSearchParams(window.location.search);
     var currentPage = Math.max(parseInt(params.get("page") || "1", 10) || 1, 1);
@@ -606,7 +790,7 @@
       window.history.replaceState(null, "", canonicalUrl);
     }
 
-    document.title = data.post.title + " | 小盖";
+    document.title = data.post.title + " | 忒卷";
     shell.classList.remove("hidden");
     document.getElementById("post-title").textContent = data.post.title;
     if (editLink && getAdminToken() && data.post.id) {
@@ -619,7 +803,7 @@
     document.getElementById("post-content").innerHTML = markdownToHtml(data.post.content || "");
 
     if (isAdmin && form.author) {
-      form.author.value = "小盖";
+      form.author.value = "忒卷";
       form.author.closest(".field-row").classList.add("hidden");
       form.classList.add("author-reply-form");
     }
@@ -691,7 +875,7 @@
           '  </div>',
           '  <form class="comment-reply-form hidden" data-reply-form="' + escapeHtml(comment.id) + '">',
           isAdmin ? "" : '    <div class="field-row"><label class="field-label" for="reply-author-' + escapeHtml(comment.id) + '">名字</label><input id="reply-author-' + escapeHtml(comment.id) + '" name="author" maxlength="24" placeholder="怎么称呼你"></div>',
-          '    <div class="field-row"><label class="field-label" for="reply-content-' + escapeHtml(comment.id) + '">回复</label><textarea id="reply-content-' + escapeHtml(comment.id) + '" name="content" rows="3" maxlength="600" placeholder="' + (isAdmin ? "以小盖身份回复" : "说点什么") + '"></textarea></div>',
+          '    <div class="field-row"><label class="field-label" for="reply-content-' + escapeHtml(comment.id) + '">回复</label><textarea id="reply-content-' + escapeHtml(comment.id) + '" name="content" rows="3" maxlength="600" placeholder="' + (isAdmin ? "以忒卷身份回复" : "说点什么") + '"></textarea></div>',
           '    <div class="comment-reply-actions"><button class="button" type="submit">' + (isAdmin ? "发布回复" : "提交回复") + '</button><button class="button button-ghost" type="button" data-reply-cancel="' + escapeHtml(comment.id) + '">取消</button></div>',
           '    <div class="feedback"></div>',
           "  </form>",
@@ -747,7 +931,7 @@
             slug: data.post.slug,
             parentId: replyForm.getAttribute("data-reply-form"),
             token: getAdminToken(),
-            author: isAdmin ? "小盖" : ((authorInput && authorInput.value) || "").trim(),
+            author: isAdmin ? "忒卷" : ((authorInput && authorInput.value) || "").trim(),
             content: ((contentInput && contentInput.value) || "").trim()
           };
 
@@ -795,7 +979,7 @@
         postId: data.post.id,
         slug: data.post.slug,
         token: getAdminToken(),
-        author: isAdmin ? "小盖" : (form.author.value || "").trim(),
+        author: isAdmin ? "忒卷" : (form.author.value || "").trim(),
         content: (form.content.value || "").trim()
       };
 
@@ -813,7 +997,7 @@
         var result = await callApi("createComment", payload);
         await reloadComments();
         form.reset();
-        if (isAdmin && form.author) form.author.value = "小盖";
+        if (isAdmin && form.author) form.author.value = "忒卷";
         setFeedback(feedback, (result && result.message) || "留言已提交，已显示在下方。", "success");
       } catch (error) {
         setFeedback(feedback, error.message || "留言提交失败", "error");
@@ -1007,7 +1191,7 @@
           '    <button class="button button-danger" type="button" data-admin-comment-delete="' + escapeHtml(comment.id) + '">删除</button>',
           "  </div>",
           '  <form class="comment-reply-form hidden" data-admin-reply-form="' + escapeHtml(comment.id) + '">',
-          '    <div class="field-row"><label class="field-label" for="admin-reply-content-' + escapeHtml(comment.id) + '">回复内容</label><textarea id="admin-reply-content-' + escapeHtml(comment.id) + '" name="content" rows="4" maxlength="600" placeholder="以小盖身份回复"></textarea></div>',
+          '    <div class="field-row"><label class="field-label" for="admin-reply-content-' + escapeHtml(comment.id) + '">回复内容</label><textarea id="admin-reply-content-' + escapeHtml(comment.id) + '" name="content" rows="4" maxlength="600" placeholder="以忒卷身份回复"></textarea></div>',
           '    <div class="comment-reply-actions"><button class="button" type="submit">发布回复</button><button class="button button-ghost" type="button" data-admin-reply-cancel="' + escapeHtml(comment.id) + '">取消</button></div>',
           '    <div class="feedback"></div>',
           "  </form>",
@@ -1367,8 +1551,33 @@
 
     // 图片上传
     var imageUploadInput = document.getElementById("image-upload-input");
+    var videoTemplateButton = document.getElementById("insert-video-template");
     var imageUploadStatus = document.getElementById("image-upload-status");
     var contentTextarea = document.getElementById("post-content-input");
+
+    function insertEditorText(text) {
+      if (!contentTextarea) return;
+      var start = contentTextarea.selectionStart;
+      var end = contentTextarea.selectionEnd;
+      var val = contentTextarea.value;
+      contentTextarea.value = val.slice(0, start) + text + val.slice(end);
+      contentTextarea.selectionStart = contentTextarea.selectionEnd = start + text.length;
+      contentTextarea.focus();
+    }
+
+    if (videoTemplateButton) {
+      videoTemplateButton.addEventListener("click", function () {
+        insertEditorText("\n@[video](https://example.com/your-video.mp4)\n");
+        if (imageUploadStatus) {
+          imageUploadStatus.textContent = "已插入视频语法";
+          imageUploadStatus.className = "editor-toolbar-status";
+          setTimeout(function () {
+            imageUploadStatus.textContent = "";
+            imageUploadStatus.className = "editor-toolbar-status";
+          }, 2500);
+        }
+      });
+    }
 
     if (imageUploadInput) {
       imageUploadInput.addEventListener("change", async function () {
@@ -1409,12 +1618,7 @@
 
           // 在光标位置插入 Markdown 图片语法
           var mdImg = "\n![" + file.name.replace(/\.[^.]+$/, "") + "](" + result.url + ")\n";
-          var start = contentTextarea.selectionStart;
-          var end = contentTextarea.selectionEnd;
-          var val = contentTextarea.value;
-          contentTextarea.value = val.slice(0, start) + mdImg + val.slice(end);
-          contentTextarea.selectionStart = contentTextarea.selectionEnd = start + mdImg.length;
-          contentTextarea.focus();
+          insertEditorText(mdImg);
 
           imageUploadStatus.textContent = "上传成功 ✓";
           imageUploadStatus.className = "editor-toolbar-status success";
