@@ -9,7 +9,7 @@ compatibility_date = "2026-04-08"
 [[d1_databases]]
 binding = "DB"
 database_name = "xiaogai-blog"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "747c1f9d-b5d4-4375-b97b-07ed402c2822"
 
 [[r2_buckets]]
 binding = "UPLOADS_BUCKET"
