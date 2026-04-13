@@ -356,6 +356,16 @@ body.sunny .light-shaft {
   opacity: 0.86;
 }
 
+.share-section {
+  margin-top: 24px;
+}
+
+.share-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .home-stream-section .section-head {
   align-items: end;
 }
@@ -383,6 +393,63 @@ body.sunny .light-shaft {
   color: var(--mid);
   font-size: 13px;
   line-height: 1.7;
+}
+
+.footer-links {
+  margin-top: 12px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: var(--mid);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ad-section {
+  margin-bottom: 0;
+}
+
+.ad-slot {
+  border: 1px dashed color-mix(in srgb, var(--line) 85%, transparent);
+  border-radius: 4px;
+  padding: 16px;
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+}
+
+.ad-slot-empty {
+  color: var(--mid);
+  font-size: 12px;
+}
+
+.ad-slot-label {
+  font-family: "Fragment Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mid);
+  margin-bottom: 6px;
+}
+
+.ad-slot-title {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.ad-slot-desc {
+  margin-top: 6px;
+  color: color-mix(in srgb, var(--text) 84%, var(--mid));
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+.ad-slot-cta {
+  margin-top: 12px;
 }
 
 .entries {
@@ -421,6 +488,8 @@ body.sunny .light-shaft {
   border: 0;
   background: transparent;
   border-radius: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 280px;
   transition: opacity 800ms var(--ease-slow), transform 800ms var(--ease-slow);
 }
 
@@ -491,6 +560,12 @@ body.sunny .light-shaft {
   border: 1px solid var(--line);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 28%), var(--surface-strong);
   border-radius: 4px;
+  content-visibility: auto;
+  contain-intrinsic-size: 560px;
+}
+
+.about-shell {
+  min-height: 380px;
 }
 
 .post-header {
@@ -801,6 +876,8 @@ textarea {
 .comment-card,
 .admin-item {
   padding: 18px;
+  content-visibility: auto;
+  contain-intrinsic-size: 220px;
 }
 
 .comment-card {
@@ -1098,6 +1175,7 @@ kbd {
   align-items: center;
   gap: 10px;
   margin-bottom: 6px;
+  flex-wrap: wrap;
 }
 
 .editor-toolbar-btn {
@@ -1113,6 +1191,7 @@ kbd {
   background: var(--surface);
   transition: border-color 0.15s, color 0.15s;
   user-select: none;
+  min-height: 32px;
 }
 
 .editor-toolbar-btn:hover {
@@ -1123,6 +1202,21 @@ kbd {
 .editor-toolbar-status {
   font-size: 12px;
   color: var(--mid);
+}
+
+.editor-preview-wrap {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.editor-preview {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
+  padding: 14px 16px;
 }
 
 .editor-toolbar-status.uploading {
@@ -1397,8 +1491,17 @@ kbd {
     gap: 4px;
   }
 
+  .footer-links {
+    margin-top: 10px;
+    gap: 10px;
+  }
+
   .links-connect a {
     font-size: 12px;
+  }
+
+  .share-actions {
+    flex-direction: column;
   }
 
   .mode-indicator {

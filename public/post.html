@@ -5,11 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>文章 | 忒卷</title>
   <meta name="description" content="忒卷的文章详情页。">
+  <meta name="keywords" content="忒卷,博客,文章,内容创作,思考">
+  <link rel="canonical" id="post-canonical" href="https://blog.03518888.xyz/post.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="忒卷">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:title" id="post-og-title" content="文章 | 忒卷">
+  <meta property="og:description" id="post-og-description" content="忒卷的文章详情页。">
+  <meta property="og:url" id="post-og-url" content="https://blog.03518888.xyz/post.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="post-twitter-title" content="文章 | 忒卷">
+  <meta name="twitter:description" id="post-twitter-description" content="忒卷的文章详情页。">
   <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2">
+  <link rel="dns-prefetch" href="//blog.teloei35.workers.dev">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono:wght@400;500&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=2026041004">
+  <link rel="stylesheet" href="./style.css?v=2026041301">
+  <script type="application/ld+json" id="post-json-ld">{}</script>
 </head>
 <body data-page="post">
   <script>(function(){var m=localStorage.getItem('xiaogai-display-mode');if(m==='day'){document.body.className='light';}else if(m==='sunny'||!m){document.body.className='light sunny';}/* night: no class needed */})();</script>
@@ -45,6 +58,21 @@
       <div id="post-content" class="post-content"></div>
     </article>
 
+    <section id="post-share-shell" class="section share-section hidden">
+      <div class="section-title">分享</div>
+      <div class="share-actions">
+        <button id="share-copy-link" class="button button-ghost" type="button">复制链接</button>
+        <button id="share-copy-moments" class="button button-ghost" type="button">复制朋友圈文案</button>
+        <button id="share-download-card" class="button" type="button">下载分享卡片</button>
+      </div>
+      <div id="share-feedback" class="feedback"></div>
+    </section>
+
+    <section class="section ad-section">
+      <div class="section-title">Sponsor</div>
+      <div id="post-ad-slot" class="ad-slot"></div>
+    </section>
+
     <div id="post-empty" class="empty-state hidden">没找到这篇文章，可能已经被删掉或还没发布。</div>
 
     <div class="divider"></div>
@@ -73,8 +101,9 @@
     <kbd>D</kbd> day &nbsp; <kbd>N</kbd> night &nbsp; <kbd>S</kbd> sunny
   </div>
 
-  <script src="./cloudbase-config.js"></script>
-  <script src="./app.js?v=2026041004"></script>
+  <canvas id="share-card-canvas" width="1080" height="1440" class="hidden" aria-hidden="true"></canvas>
+  <script src="./cloudbase-config.js" defer></script>
+  <script src="./app.js?v=2026041301" defer></script>
 </body>
 </html>
 

@@ -56,6 +56,96 @@
       .replace(/'/g, "&#39;");
   }
 
+  function resolveSiteBaseUrl() {
+    var custom = String(config.siteUrl || config.siteBaseUrl || "").trim();
+    if (custom) return custom.replace(/\/+$/, "");
+    return window.location.origin;
+  }
+
+  function truncateText(value, maxLength) {
+    var text = String(value || "").trim();
+    if (!maxLength || text.length <= maxLength) return text;
+    return text.slice(0, Math.max(0, maxLength - 1)).trim() + "…";
+  }
+
+  function setMetaContent(selector, content) {
+    var element = document.querySelector(selector);
+    if (!element || !content) return;
+    element.setAttribute("content", content);
+  }
+
+  function setCanonicalUrl(url) {
+    var canonical = document.getElementById("post-canonical") || document.querySelector('link[rel="canonical"]');
+    if (!canonical || !url) return;
+    canonical.setAttribute("href", url);
+  }
+
+  function updatePostSeo(post) {
+    if (!post) return;
+    var base = resolveSiteBaseUrl();
+    var postUrl = base + "/post.html?id=" + encodeURIComponent(post.id || "");
+    var description = truncateText(post.excerpt || excerptFromContent(post.content || ""), 120);
+    var title = String(post.title || "文章") + " | " + (config.siteName || "忒卷");
+
+    document.title = title;
+    setMetaContent('meta[name="description"]', description);
+    setMetaContent('#post-og-title', title);
+    setMetaContent('#post-og-description', description);
+    setMetaContent('#post-og-url', postUrl);
+    setMetaContent('#post-twitter-title', title);
+    setMetaContent('#post-twitter-description', description);
+    setCanonicalUrl(postUrl);
+
+    var ld = document.getElementById("post-json-ld");
+    if (ld) {
+      ld.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        headline: post.title || "",
+        description: description,
+        datePublished: post.publishedAt || "",
+        dateModified: post.updatedAt || post.publishedAt || "",
+        mainEntityOfPage: postUrl,
+        url: postUrl,
+        author: {
+          "@type": "Person",
+          name: config.siteName || "忒卷"
+        },
+        publisher: {
+          "@type": "Organization",
+          name: config.siteName || "忒卷"
+        }
+      });
+    }
+  }
+
+  async function copyTextToClipboard(text) {
+    var value = String(text || "");
+    if (!value) throw new Error("没有可复制的内容");
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(value);
+      return;
+    }
+
+    var textarea = document.createElement("textarea");
+    textarea.value = value;
+    textarea.setAttribute("readonly", "readonly");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+    document.body.appendChild(textarea);
+    textarea.select();
+    var ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch (error) {
+      ok = false;
+    }
+    document.body.removeChild(textarea);
+    if (!ok) throw new Error("复制失败，请手动复制");
+  }
+
   function sanitizeMarkdownUrl(rawUrl) {
     var value = String(rawUrl || "").trim();
     if (!value) return "";
@@ -622,7 +712,8 @@
       { label: "小红书", href: "https://www.xiaohongshu.com/user/profile/61ec2a3a000000001000868f", target: "_blank" },
       { label: "邮箱", href: "mailto:gainubi@gmail.com" },
       { label: "GitHub", href: "https://github.com/", target: "_blank" },
-      { label: "哔哩哔哩", href: "https://space.bilibili.com/", target: "_blank" }
+      { label: "哔哩哔哩", href: "https://space.bilibili.com/", target: "_blank" },
+      { label: "关于", href: "/about.html" }
     ];
 
     var rawLinks = Array.isArray(config.connectLinks) && config.connectLinks.length
@@ -646,6 +737,65 @@
       .filter(Boolean);
   }
 
+  function resolveAdSlots() {
+    if (Array.isArray(config.adSlots) && config.adSlots.length) {
+      return config.adSlots;
+    }
+
+    return [
+      {
+        slot: "home",
+        label: "合作推广",
+        title: "这里可以放你的广告位",
+        description: "支持活动宣传、产品推荐、品牌曝光。",
+        cta: "联系投放",
+        href: "mailto:gainubi@gmail.com"
+      },
+      {
+        slot: "post",
+        label: "文章赞助",
+        title: "这里可以放文章赞助位",
+        description: "支持长期合作、品牌露出和活动联动。",
+        cta: "马上联系",
+        href: "mailto:gainubi@gmail.com"
+      }
+    ];
+  }
+
+  function findAdSlot(slotName) {
+    return resolveAdSlots().find(function (item) {
+      return item && String(item.slot || "").trim() === slotName;
+    }) || null;
+  }
+
+  function renderAdSlot(containerId, slotName) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+
+    var ad = findAdSlot(slotName);
+    if (!ad) {
+      container.innerHTML = '<div class="ad-slot-empty">广告位待配置</div>';
+      return;
+    }
+
+    var href = sanitizeMarkdownUrl(ad.href || ad.url || "");
+    var title = String(ad.title || "").trim();
+    var desc = String(ad.description || "").trim();
+    var label = String(ad.label || "").trim();
+    var cta = String(ad.cta || "").trim();
+    var target = String(ad.target || "").trim() || (href && /^(https?:)?\/\//i.test(href) ? "_blank" : "");
+    var anchorAttrs = "";
+    if (target) anchorAttrs += ' target="' + escapeHtml(target) + '"';
+    if (target === "_blank") anchorAttrs += ' rel="noopener noreferrer"';
+
+    container.innerHTML = [
+      label ? '<div class="ad-slot-label">' + escapeHtml(label) + "</div>" : "",
+      title ? '<div class="ad-slot-title">' + escapeHtml(title) + "</div>" : "",
+      desc ? '<div class="ad-slot-desc">' + escapeHtml(desc) + "</div>" : "",
+      href && cta ? '<div class="ad-slot-cta"><a class="button button-secondary" href="' + escapeHtml(href) + '"' + anchorAttrs + ">" + escapeHtml(cta) + "</a></div>" : ""
+    ].join("");
+  }
+
   function renderConnectLinks() {
     var container = document.getElementById("connect-links");
     if (!container) return;
@@ -665,6 +815,7 @@
 
   async function initHomePage() {
     renderConnectLinks();
+    renderAdSlot("home-ad-slot", "home");
 
     var pageSize = 10;
     var params = new URLSearchParams(window.location.search);
@@ -727,6 +878,21 @@
       });
     }
 
+    function buildPostCard(post) {
+      var href = "./post.html?id=" + encodeURIComponent(post.id);
+      return [
+        '<article class="entry-card">',
+        '  <a class="entry-link" href="' + href + '">',
+        '    <h2 class="entry-title">' + escapeHtml(post.title) + "</h2>",
+        '    <p class="entry-excerpt">' + escapeHtml(post.excerpt || excerptFromContent(post.content || "")) + "</p>",
+        '    <div class="entry-meta">',
+        '      <span class="meta-chip">' + escapeHtml(formatDate(post.publishedAt)) + "</span>",
+        "    </div>",
+        "  </a>",
+        "</article>"
+      ].join("");
+    }
+
     function renderHomePosts(postsToRender) {
       postsToRender = postsToRender || posts;
 
@@ -738,23 +904,31 @@
       }
 
       empty.classList.add("hidden");
-      list.innerHTML = postsToRender.map(function (post) {
-        var href = "./post.html?id=" + encodeURIComponent(post.id);
-        return [
-          '<article class="entry-card">',
-          '  <a class="entry-link" href="' + href + '">',
-          '    <h2 class="entry-title">' + escapeHtml(post.title) + "</h2>",
-          '    <p class="entry-excerpt">' + escapeHtml(post.excerpt || excerptFromContent(post.content || "")) + "</p>",
-          '    <div class="entry-meta">',
-          '      <span class="meta-chip">' + escapeHtml(formatDate(post.publishedAt)) + "</span>",
-          "    </div>",
-          "  </a>",
-          "</article>"
-        ].join("");
-      }).join("");
+      list.innerHTML = "";
 
-      renderHomePagination();
-      animateEntries(".entry-card");
+      var chunkSize = 4;
+      var cursor = 0;
+
+      function renderChunk() {
+        var chunk = postsToRender.slice(cursor, cursor + chunkSize);
+        var html = chunk.map(buildPostCard).join("");
+        list.insertAdjacentHTML("beforeend", html);
+        cursor += chunkSize;
+
+        if (cursor < postsToRender.length) {
+          if (window.requestAnimationFrame) {
+            window.requestAnimationFrame(renderChunk);
+          } else {
+            setTimeout(renderChunk, 0);
+          }
+          return;
+        }
+
+        renderHomePagination();
+        animateEntries(".entry-card");
+      }
+
+      renderChunk();
     }
 
     updateHomePageUrl(currentPage);
@@ -772,7 +946,15 @@
     var commentsEmpty = document.getElementById("comments-empty");
     var form = document.getElementById("comment-form");
     var feedback = document.getElementById("comment-feedback");
+    var shareShell = document.getElementById("post-share-shell");
+    var shareCopyLinkButton = document.getElementById("share-copy-link");
+    var shareCopyMomentsButton = document.getElementById("share-copy-moments");
+    var shareDownloadButton = document.getElementById("share-download-card");
+    var shareFeedback = document.getElementById("share-feedback");
+    var shareCanvas = document.getElementById("share-card-canvas");
     var isAdmin = Boolean(getAdminToken());
+
+    renderAdSlot("post-ad-slot", "post");
 
     if (!postId) {
       empty.classList.remove("hidden");
@@ -790,7 +972,7 @@
       window.history.replaceState(null, "", canonicalUrl);
     }
 
-    document.title = data.post.title + " | 忒卷";
+    updatePostSeo(data.post);
     shell.classList.remove("hidden");
     document.getElementById("post-title").textContent = data.post.title;
     if (editLink && getAdminToken() && data.post.id) {
@@ -801,6 +983,140 @@
       '<span class="meta-chip">' + escapeHtml(formatDate(data.post.publishedAt)) + "</span>"
     ].join("");
     document.getElementById("post-content").innerHTML = markdownToHtml(data.post.content || "");
+
+    function buildSharePostUrl() {
+      var base = resolveSiteBaseUrl();
+      return base + "/post.html?id=" + encodeURIComponent(data.post.id || "");
+    }
+
+    function buildMomentsCopy() {
+      var lines = [
+        data.post.title || "",
+        truncateText(data.post.excerpt || excerptFromContent(data.post.content || ""), 80),
+        buildSharePostUrl()
+      ].filter(Boolean);
+      return lines.join("\n");
+    }
+
+    function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+      var words = String(text || "").split("");
+      var line = "";
+      var drawn = 0;
+      var currentY = y;
+
+      for (var i = 0; i < words.length; i += 1) {
+        var next = line + words[i];
+        if (ctx.measureText(next).width > maxWidth && line) {
+          ctx.fillText(line, x, currentY);
+          drawn += 1;
+          currentY += lineHeight;
+          line = words[i];
+          if (maxLines && drawn >= maxLines) {
+            ctx.fillText("…", x, currentY - lineHeight + 2);
+            return currentY;
+          }
+        } else {
+          line = next;
+        }
+      }
+
+      if (line) {
+        ctx.fillText(line, x, currentY);
+      }
+      return currentY;
+    }
+
+    function drawShareCard() {
+      if (!shareCanvas) return null;
+      var ctx = shareCanvas.getContext("2d");
+      if (!ctx) return null;
+
+      var width = shareCanvas.width;
+      var height = shareCanvas.height;
+      var padding = 96;
+      var title = String(data.post.title || "");
+      var excerpt = truncateText(data.post.excerpt || excerptFromContent(data.post.content || ""), 150);
+      var url = buildSharePostUrl();
+      var siteName = String(config.siteName || "忒卷");
+
+      ctx.clearRect(0, 0, width, height);
+
+      var gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, "#f8f4ec");
+      gradient.addColorStop(1, "#efe4d8");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = "#1d1814";
+      ctx.font = "700 66px 'Noto Serif SC'";
+      var y = 220;
+      y = wrapCanvasText(ctx, title, padding, y, width - padding * 2, 86, 4) + 44;
+
+      ctx.fillStyle = "#4a413a";
+      ctx.font = "400 40px 'Noto Sans SC'";
+      y = wrapCanvasText(ctx, excerpt, padding, y, width - padding * 2, 60, 5) + 70;
+
+      ctx.strokeStyle = "rgba(41, 37, 36, 0.18)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(width - padding, y);
+      ctx.stroke();
+
+      y += 80;
+      ctx.fillStyle = "#6a6057";
+      ctx.font = "500 32px 'Fragment Mono'";
+      ctx.fillText(siteName + " · 微信分享卡片", padding, y);
+
+      y += 80;
+      ctx.fillStyle = "#8b7564";
+      ctx.font = "400 30px 'Fragment Mono'";
+      wrapCanvasText(ctx, url, padding, y, width - padding * 2, 46, 4);
+
+      return shareCanvas;
+    }
+
+    if (shareShell) {
+      shareShell.classList.remove("hidden");
+    }
+
+    if (shareCopyLinkButton) {
+      shareCopyLinkButton.addEventListener("click", async function () {
+        try {
+          await copyTextToClipboard(buildSharePostUrl());
+          setFeedback(shareFeedback, "链接已复制，可以直接粘贴到微信。", "success");
+        } catch (error) {
+          setFeedback(shareFeedback, error.message || "复制失败", "error");
+        }
+      });
+    }
+
+    if (shareCopyMomentsButton) {
+      shareCopyMomentsButton.addEventListener("click", async function () {
+        try {
+          await copyTextToClipboard(buildMomentsCopy());
+          setFeedback(shareFeedback, "朋友圈文案已复制。", "success");
+        } catch (error) {
+          setFeedback(shareFeedback, error.message || "复制失败", "error");
+        }
+      });
+    }
+
+    if (shareDownloadButton) {
+      shareDownloadButton.addEventListener("click", function () {
+        try {
+          var canvas = drawShareCard();
+          if (!canvas) throw new Error("当前浏览器不支持卡片生成");
+          var link = document.createElement("a");
+          link.download = "share-card-" + Date.now() + ".png";
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+          setFeedback(shareFeedback, "分享卡片已生成并开始下载。", "success");
+        } catch (error) {
+          setFeedback(shareFeedback, error.message || "生成失败", "error");
+        }
+      });
+    }
 
     if (isAdmin && form.author) {
       form.author.value = "忒卷";
@@ -1047,6 +1363,9 @@
       var commentSearchInput = document.getElementById("admin-comment-search");
       var commentPostFilter = document.getElementById("admin-comment-post-filter");
     var commentsPagination = document.getElementById("admin-comments-pagination");
+    var contentTextarea = document.getElementById("post-content-input");
+    var postPreview = document.getElementById("post-preview");
+    var editorActionButtons = document.querySelectorAll("[data-editor-action]");
     var newPostButton = document.getElementById("new-post-button");
     var cancelPostEditButton = document.getElementById("cancel-post-edit");
     var seedButton = document.getElementById("seed-posts-button");
@@ -1070,6 +1389,58 @@
       commentsViewButton.classList.toggle("is-active", view === "comments");
     }
 
+    function refreshEditorPreview() {
+      if (!postPreview || !contentTextarea) return;
+      var value = String(contentTextarea.value || "");
+      if (!value.trim()) {
+        postPreview.innerHTML = '<div class="empty-state">在左侧输入 Markdown，这里会实时预览。</div>';
+        return;
+      }
+      postPreview.innerHTML = markdownToHtml(value);
+    }
+
+    function replaceEditorSelection(prefix, suffix, placeholder) {
+      if (!contentTextarea) return;
+      var start = contentTextarea.selectionStart;
+      var end = contentTextarea.selectionEnd;
+      var value = contentTextarea.value;
+      var selected = value.slice(start, end) || placeholder || "";
+      var next = value.slice(0, start) + prefix + selected + (suffix || "") + value.slice(end);
+      contentTextarea.value = next;
+      var caret = start + prefix.length + selected.length + (suffix || "").length;
+      contentTextarea.selectionStart = contentTextarea.selectionEnd = caret;
+      contentTextarea.focus();
+      refreshEditorPreview();
+    }
+
+    function insertEditorLine(snippet) {
+      if (!contentTextarea) return;
+      var start = contentTextarea.selectionStart;
+      var end = contentTextarea.selectionEnd;
+      var value = contentTextarea.value;
+      var next = value.slice(0, start) + snippet + value.slice(end);
+      contentTextarea.value = next;
+      var caret = start + snippet.length;
+      contentTextarea.selectionStart = contentTextarea.selectionEnd = caret;
+      contentTextarea.focus();
+      refreshEditorPreview();
+    }
+
+    function applyEditorAction(action) {
+      var actions = {
+        h2: function () { replaceEditorSelection("## ", "", "小标题"); },
+        h3: function () { replaceEditorSelection("### ", "", "小标题"); },
+        bold: function () { replaceEditorSelection("**", "**", "加粗内容"); },
+        italic: function () { replaceEditorSelection("*", "*", "斜体内容"); },
+        quote: function () { replaceEditorSelection("> ", "", "引用内容"); },
+        code: function () { insertEditorLine("\n```\n代码内容\n```\n"); },
+        link: function () { replaceEditorSelection("[", "](https://example.com)", "链接文字"); },
+        ul: function () { insertEditorLine("\n- 列表项1\n- 列表项2\n"); },
+        ol: function () { insertEditorLine("\n1. 列表项1\n2. 列表项2\n"); }
+      };
+      if (actions[action]) actions[action]();
+    }
+
     function resetPostForm() {
       postForm.reset();
       document.getElementById("post-id").value = "";
@@ -1080,6 +1451,7 @@
       postFormSubtitle.textContent = "只需要填写标题和正文";
       postSubmitButton.textContent = "发布文章";
       setFeedback(postFeedback, "");
+      refreshEditorPreview();
     }
 
     function updateSummary(element, visibleCount, totalCount, label) {
@@ -1132,6 +1504,7 @@
       postFormTitle.textContent = "编辑文章";
       postFormSubtitle.textContent = "修改后会保留这篇文章原有发布时间";
       postSubmitButton.textContent = "保存文章";
+      refreshEditorPreview();
       setAdminView("editor");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -1553,7 +1926,18 @@
     var imageUploadInput = document.getElementById("image-upload-input");
     var videoTemplateButton = document.getElementById("insert-video-template");
     var imageUploadStatus = document.getElementById("image-upload-status");
-    var contentTextarea = document.getElementById("post-content-input");
+
+    editorActionButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var action = button.getAttribute("data-editor-action");
+        applyEditorAction(action);
+      });
+    });
+
+    if (contentTextarea) {
+      contentTextarea.addEventListener("input", refreshEditorPreview);
+      contentTextarea.addEventListener("keyup", refreshEditorPreview);
+    }
 
     function insertEditorText(text) {
       if (!contentTextarea) return;
@@ -1563,6 +1947,7 @@
       contentTextarea.value = val.slice(0, start) + text + val.slice(end);
       contentTextarea.selectionStart = contentTextarea.selectionEnd = start + text.length;
       contentTextarea.focus();
+      refreshEditorPreview();
     }
 
     if (videoTemplateButton) {
@@ -1639,6 +2024,8 @@
       resetPostForm();
       setAdminView("comments");
       await loadAdminData();
+    } else {
+      refreshEditorPreview();
     }
   }
 

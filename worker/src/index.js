@@ -66,7 +66,11 @@ async function handleBlogApi(request, env) {
       return await handleGetRss(request, env);
     }
 
-    throw new ApiError("GET 仅支持 action=getRss", 405);
+    if (action === "getSitemap") {
+      return await handleGetSitemap(request, env);
+    }
+
+    throw new ApiError("GET 仅支持 action=getRss 或 action=getSitemap", 405);
   }
 
   if (request.method !== "POST") {
@@ -592,6 +596,64 @@ async function handleGetRss(request, env) {
     headers: {
       "content-type": "application/rss+xml; charset=utf-8",
       "cache-control": "public, max-age=300",
+      ...CORS_HEADERS
+    }
+  });
+}
+
+async function handleGetSitemap(request, env) {
+  const db = getDb(env);
+  const baseUrl = getSiteBaseUrl(request, env);
+  const nowIso = new Date().toISOString();
+
+  const result = await db
+    .prepare(`
+      SELECT id, published_at, updated_at
+      FROM posts
+      WHERE status = 'published'
+      ORDER BY published_at DESC
+      LIMIT 500
+    `)
+    .all();
+
+  const posts = result.results || [];
+
+  const staticItems = [
+    { loc: `${baseUrl}/`, lastmod: nowIso, changefreq: "daily", priority: "1.0" },
+    { loc: `${baseUrl}/about.html`, lastmod: nowIso, changefreq: "weekly", priority: "0.6" }
+  ];
+
+  const postItems = posts.map((row) => {
+    const postId = String(row.id || "").trim();
+    const dateValue = row.updated_at || row.published_at || nowIso;
+    const lastmod = Number.isNaN(new Date(dateValue).getTime()) ? nowIso : new Date(dateValue).toISOString();
+    return {
+      loc: `${baseUrl}/post.html?id=${encodeURIComponent(postId)}`,
+      lastmod,
+      changefreq: "weekly",
+      priority: "0.8"
+    };
+  });
+
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...staticItems.concat(postItems).map((item) => [
+      "<url>",
+      `<loc>${escapeXml(item.loc)}</loc>`,
+      `<lastmod>${escapeXml(item.lastmod)}</lastmod>`,
+      `<changefreq>${escapeXml(item.changefreq)}</changefreq>`,
+      `<priority>${escapeXml(item.priority)}</priority>`,
+      "</url>"
+    ].join("")),
+    "</urlset>"
+  ].join("");
+
+  return new Response(xml, {
+    status: 200,
+    headers: {
+      "content-type": "application/xml; charset=utf-8",
+      "cache-control": "public, max-age=600",
       ...CORS_HEADERS
     }
   });
