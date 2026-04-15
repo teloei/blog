@@ -1,9 +1,14 @@
-﻿CREATE TABLE IF NOT EXISTS posts (
+-- 博客数据库表结构
+-- 支持：文章、评论、标签系统
+
+-- 文章表
+CREATE TABLE IF NOT EXISTS posts (
   id TEXT PRIMARY KEY,
   slug TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
   excerpt TEXT NOT NULL DEFAULT '',
   content TEXT NOT NULL,
+  tags TEXT NOT NULL DEFAULT '[]',  -- JSON数组存储标签
   status TEXT NOT NULL DEFAULT 'published',
   published_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
@@ -12,6 +17,14 @@
 CREATE INDEX IF NOT EXISTS idx_posts_status_published_at
 ON posts(status, published_at DESC);
 
+-- 标签索引（用于搜索）
+CREATE INDEX IF NOT EXISTS idx_posts_tags
+ON posts(tags);
+
+-- 全文搜索支持（使用 LIKE 模糊匹配）
+-- SQLite FTS5 需要额外配置，这里用简单方案
+
+-- 评论表
 CREATE TABLE IF NOT EXISTS comments (
   id TEXT PRIMARY KEY,
   post_id TEXT NOT NULL,
@@ -33,3 +46,10 @@ ON comments(parent_id);
 
 CREATE INDEX IF NOT EXISTS idx_comments_status_created
 ON comments(status, created_at DESC);
+
+-- 标签统计表（可选，用于标签云）
+CREATE TABLE IF NOT EXISTS tag_stats (
+  tag TEXT PRIMARY KEY,
+  post_count INTEGER NOT NULL DEFAULT 0,
+  last_used_at TEXT NOT NULL
+);

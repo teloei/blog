@@ -82,6 +82,7 @@ async function handleBlogApi(request, env) {
   const handlers = {
     listPosts: handleListPosts,
     getPost: handleGetPost,
+    getTags: handleGetTags,
     createComment: handleCreateComment,
     adminLogin: handleAdminLogin,
     adminListPosts: handleAdminListPosts,
@@ -105,26 +106,68 @@ async function handleListPosts(payload, _request, env) {
   const page = normalizeInt(payload.page, 1, 1, 999999);
   const pageSize = normalizeInt(payload.pageSize, 10, 1, MAX_PAGE_SIZE);
   const offset = (page - 1) * pageSize;
+  const search = sanitizeText(payload.search, 100);
+  
+  let whereClause = "status = 'published'";
+  let params = [];
+  
+  if (search) {
+    whereClause += " AND (title LIKE ?1 OR content LIKE ?1 OR excerpt LIKE ?1)";
+    params.push(`%${search}%`);
+  }
 
   const listResult = await db
     .prepare(`
       SELECT id, slug, title, excerpt, content, status, published_at, updated_at
       FROM posts
-      WHERE status = 'published'
+      WHERE ${whereClause}
       ORDER BY published_at DESC
-      LIMIT ?1 OFFSET ?2
+      LIMIT ?2 OFFSET ?3
     `)
-    .bind(pageSize, offset)
+    .bind(...params, pageSize, offset)
     .all();
 
   const countResult = await db
-    .prepare("SELECT COUNT(*) AS total FROM posts WHERE status = 'published'")
+    .prepare(`SELECT COUNT(*) AS total FROM posts WHERE ${whereClause}`)
+    .bind(...params)
     .first();
 
   const posts = (listResult.results || []).map(mapPostRow);
   const total = Number((countResult && countResult.total) || 0);
 
   return { posts, total };
+}
+
+async function handleGetTags(payload, _request, env) {
+  const db = getDb(env);
+  
+  // 简单实现：从文章内容中提取标签
+  const result = await db
+    .prepare(`
+      SELECT tags FROM posts 
+      WHERE status = 'published' AND tags != '[]'
+    `)
+    .all();
+  
+  const tagCount = {};
+  (result.results || []).forEach(function(row) {
+    try {
+      const tags = JSON.parse(row.tags || "[]");
+      tags.forEach(function(tag) {
+        tagCount[tag] = (tagCount[tag] || 0) + 1;
+      });
+    } catch (e) {}
+  });
+  
+  const tags = Object.entries(tagCount)
+    .map(function(entry) {
+      return { name: entry[0], count: entry[1] };
+    })
+    .sort(function(a, b) {
+      return b.count - a.count;
+    });
+  
+  return { tags };
 }
 
 async function handleGetPost(payload, _request, env) {

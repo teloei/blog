@@ -4,15 +4,62 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>文章 | 忒卷</title>
-  <meta name="description" content="忒卷的文章详情页。">
+  <meta name="description" content="">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph (动态更新) -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="忒卷">
+  <meta property="og:title" content="">
+  <meta property="og:description" content="">
+  <meta property="og:url" content="">
+  <meta property="og:image" content="">
+  <meta property="article:published_time" content="">
+  <meta property="article:author" content="忒卷">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="">
+  <meta name="twitter:description" content="">
+  <meta name="twitter:image" content="">
+  
+  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  
+  <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://blog.teloei35.workers.dev">
+  
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono:wght@400;500&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=2026041501">
+  
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="忒卷 - RSS 订阅" href="https://blog.teloei35.workers.dev/blogApi?action=getRss">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="./style.css?v=2026041502">
+  
+  <!-- JSON-LD (will be updated by JS) -->
+  <script type="application/ld+json" id="article-json-ld">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "author": {
+      "@type": "Person",
+      "name": "忒卷"
+    }
+  }
+  </script>
 </head>
 <body data-page="post">
-  <script>(function(){var m=localStorage.getItem('xiaogai-display-mode');if(m==='day'){document.body.className='light';}else if(m==='sunny'||!m){document.body.className='light sunny';}/* night: no class needed */})();</script>
+  <script>(function(){var m=localStorage.getItem('xiaogai-display-mode');if(m==='day'){document.body.className='light';}else if(m==='sunny'||!m){document.body.className='light sunny';}})();</script>
+  
+  <!-- Reading Progress -->
+  <div id="reading-progress" class="reading-progress"></div>
+  
+  <!-- Atmospheric Effects -->
   <div class="noise"></div>
   <video id="leaves-overlay" src="./leaves.mp4" loop muted playsinline preload="none"></video>
   <audio id="forest-audio" src="./forest.mp3" loop preload="none"></audio>
@@ -21,42 +68,63 @@
   <div class="light-shaft light-shaft-2"></div>
   <div class="light-shaft light-shaft-3"></div>
 
-  <div id="reading-progress" class="reading-progress"></div>
-
+  <!-- Mode Indicator -->
   <div class="mode-indicator">
-    <span id="mode-label">sunny</span>
-    <div class="mode-dot" id="dot-night"></div>
-    <div class="mode-dot" id="dot-day"></div>
-    <div class="mode-dot" id="dot-sunny"></div>
+    <a class="subtle-link" href="./index.html">返回首页</a>
+    <a class="subtle-link hidden" id="post-edit-link" href="./admin.html">编辑</a>
+    <div class="mode-dot" id="dot-night" title="夜间模式"></div>
+    <div class="mode-dot" id="dot-day" title="日间模式"></div>
+    <div class="mode-dot" id="dot-sunny" title="阳光模式"></div>
   </div>
 
   <main class="page page-narrow">
     <section class="hero hero-compact">
       <div class="section-head">
-        <a class="subtle-link" href="./index.html">返回首页</a>
-        <a id="post-edit-link" class="subtle-link hidden" href="./admin.html">编辑文章</a>
       </div>
     </section>
 
+    <!-- Post Article -->
     <article id="post-view" class="post-shell hidden">
       <header class="post-header">
         <div class="section-title">Article</div>
         <h1 id="post-title" class="post-title"></h1>
-        <div id="post-meta" class="post-meta"></div>
+        <div id="post-meta" class="post-meta">
+          <span class="meta-item" id="post-date"></span>
+          <span class="meta-item" id="post-reading-time"></span>
+        </div>
+        <div id="post-tags" class="post-tags"></div>
       </header>
       <div id="post-content" class="post-content"></div>
+      
+      <!-- Share Bar -->
       <div class="post-share-bar">
+        <span class="share-label">分享</span>
         <button class="share-button" id="copy-link-btn" type="button" title="复制链接">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
           <span>复制链接</span>
+        </button>
+        <button class="share-button" id="share-twitter-btn" type="button" title="分享到 Twitter">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          <span>Twitter</span>
+        </button>
+        <button class="share-button" id="share-weibo-btn" type="button" title="分享到微博">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.043 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443zm7.63-9.065c-.271-.086-.463-.145-.318-.521.306-.781.338-1.453.002-1.932-.633-.901-2.363-.852-4.35-.024 0 0-.623.272-.463-.221.304-.973.258-1.787-.214-2.257-.944-.94-3.455.086-5.606 2.294-1.624 1.668-2.576 3.436-2.576 4.926 0 2.854 3.664 4.598 7.246 4.598 4.696 0 7.82-2.729 7.82-4.898 0-1.313-1.107-2.058-1.541-1.965zm3.502-5.836c-1.6-1.887-3.96-2.61-5.26-1.612-1.3.998-.97 3.252.63 5.139 1.6 1.887 3.96 2.61 5.26 1.612 1.3-.998.97-3.252-.63-5.139zm-4.59 2.539c-.47-.553-.47-1.263-.008-1.586.463-.322 1.183-.092 1.653.46.47.553.47 1.263.008 1.586-.463.323-1.183.092-1.653-.46z"/></svg>
+          <span>微博</span>
         </button>
       </div>
     </article>
 
     <div id="post-empty" class="empty-state hidden">没找到这篇文章，可能已经被删掉或者还没发布。</div>
 
+    <!-- Related Posts -->
+    <section id="related-posts-section" class="section related-section hidden">
+      <div class="section-title">相关文章</div>
+      <div id="related-posts-list" class="entries entries-compact"></div>
+    </section>
+
     <div class="divider"></div>
 
+    <!-- Comments Section -->
     <section class="section">
       <div class="section-title">留言</div>
       <div id="comments-list" class="comments-list"></div>
@@ -77,15 +145,18 @@
     </section>
   </main>
 
+  <!-- Back to Top -->
   <button id="back-to-top" class="back-to-top" type="button" title="回到顶部">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
 
+  <!-- Keyboard Shortcuts -->
   <div class="shortcuts-hint">
     <kbd>D</kbd> day &nbsp; <kbd>N</kbd> night &nbsp; <kbd>S</kbd> sunny
   </div>
 
+  <!-- Scripts -->
   <script src="./cloudbase-config.js"></script>
-  <script src="./app.js?v=2026041501"></script>
+  <script src="./app.js?v=2026041502"></script>
 </body>
 </html>

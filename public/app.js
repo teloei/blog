@@ -673,9 +673,73 @@
     var empty = document.getElementById("posts-empty");
     var pagination = document.getElementById("home-posts-pagination");
     var total = 0;
+    
+    // Search functionality
+    var searchBox = document.getElementById("search-box");
+    var searchInput = document.getElementById("search-input");
+    var searchToggle = document.getElementById("search-toggle");
+    var searchClose = document.getElementById("search-close");
+    var searchQuery = params.get("q") || params.get("tag") || "";
+    
+    if (searchToggle && searchBox && searchInput) {
+      searchToggle.addEventListener("click", function() {
+        searchBox.classList.remove("hidden");
+        searchInput.focus();
+      });
+      
+      if (searchClose) {
+        searchClose.addEventListener("click", function() {
+          searchBox.classList.add("hidden");
+          searchInput.value = "";
+          var next = new URL(window.location.href);
+          next.searchParams.delete("q");
+          next.searchParams.delete("tag");
+          window.history.replaceState(null, "", next.pathname + next.search + next.hash);
+          initHomePage();
+        });
+      }
+      
+      var searchTimeout = null;
+      searchInput.addEventListener("input", function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function() {
+          var next = new URL(window.location.href);
+          if (searchInput.value.trim()) {
+            next.searchParams.set("q", searchInput.value.trim());
+          } else {
+            next.searchParams.delete("q");
+          }
+          window.history.replaceState(null, "", next.pathname + next.search + next.hash);
+          initHomePage();
+        }, 300);
+      });
+      
+      // Keyboard shortcut for search
+      document.addEventListener("keydown", function(e) {
+        if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
+          var activeTag = document.activeElement.tagName;
+          if (activeTag !== "INPUT" && activeTag !== "TEXTAREA") {
+            e.preventDefault();
+            searchBox.classList.remove("hidden");
+            searchInput.focus();
+          }
+        }
+        if (e.key === "Escape" && !searchBox.classList.contains("hidden")) {
+          searchBox.classList.add("hidden");
+        }
+      });
+      
+      if (searchQuery) {
+        searchBox.classList.remove("hidden");
+        searchInput.value = searchQuery;
+      }
+    }
+    
+    // Render tags cloud
+    await renderTagsCloud();
 
     async function loadPage(page) {
-      var data = await listPosts({ page: page, pageSize: pageSize });
+      var data = await listPosts({ page: page, pageSize: pageSize, search: searchQuery });
       total = data.total;
       return data.posts;
     }
@@ -793,14 +857,32 @@
     document.title = data.post.title + " | 忒卷";
     shell.classList.remove("hidden");
     document.getElementById("post-title").textContent = data.post.title;
+    
+    // Update SEO meta tags
+    updateSeoMetaTags(data.post);
+    
+    // Calculate and display reading time
+    var readingTime = calculateReadingTime(data.post.content || "");
+    var postMeta = document.getElementById("post-meta");
+    postMeta.innerHTML = [
+      '<span class="meta-item">' + escapeHtml(formatDate(data.post.publishedAt)) + "</span>",
+      '<span class="meta-item">' + readingTime + " 分钟阅读</span>"
+    ].join("");
+    
+    // Display tags if available
+    renderPostTags(data.post.tags);
+    
     if (editLink && getAdminToken() && data.post.id) {
       editLink.href = "./admin.html?edit=" + encodeURIComponent(data.post.id);
       editLink.classList.remove("hidden");
     }
-    document.getElementById("post-meta").innerHTML = [
-      '<span class="meta-chip">' + escapeHtml(formatDate(data.post.publishedAt)) + "</span>"
-    ].join("");
     document.getElementById("post-content").innerHTML = markdownToHtml(data.post.content || "");
+    
+    // Load related posts
+    loadRelatedPosts(data.post);
+    
+    // Setup social sharing
+    setupSocialSharing(data.post);
 
     if (isAdmin && form.author) {
       form.author.value = "忒卷";
@@ -1693,6 +1775,197 @@
       resetPostForm();
       setAdminView("comments");
       await loadAdminData();
+    }
+  }
+
+  // SEO Meta Tags Update
+  function updateSeoMetaTags(post) {
+    var pageUrl = window.location.href;
+    var description = post.excerpt || excerptFromContent(post.content || "");
+    var imageUrl = extractFirstImage(post.content) || "https://blog.03518888.xyz/og-image.png";
+    
+    // Update basic meta
+    setMetaTag("description", description);
+    setMetaTag("og:title", post.title, "property");
+    setMetaTag("og:description", description, "property");
+    setMetaTag("og:url", pageUrl, "property");
+    setMetaTag("og:image", imageUrl, "property");
+    setMetaTag("article:published_time", post.publishedAt, "property");
+    
+    // Twitter Card
+    setMetaTag("twitter:title", post.title);
+    setMetaTag("twitter:description", description);
+    setMetaTag("twitter:image", imageUrl);
+    
+    // Update JSON-LD
+    updateArticleJsonLd(post, pageUrl, description, imageUrl);
+  }
+  
+  function setMetaTag(name, content, attr) {
+    attr = attr || "name";
+    var selector = 'meta[' + attr + '="' + name + '"]';
+    var meta = document.querySelector(selector);
+    if (meta) {
+      meta.setAttribute("content", content);
+    }
+  }
+  
+  function updateArticleJsonLd(post, url, description, image) {
+    var jsonLd = document.getElementById("article-json-ld");
+    if (jsonLd) {
+      var data = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": post.title,
+        "description": description,
+        "image": image,
+        "url": url,
+        "datePublished": post.publishedAt,
+        "dateModified": post.updatedAt || post.publishedAt,
+        "author": {
+          "@type": "Person",
+          "name": "忒卷"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "忒卷",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://blog.03518888.xyz/favicon.svg"
+          }
+        }
+      };
+      jsonLd.textContent = JSON.stringify(data);
+    }
+  }
+  
+  function extractFirstImage(content) {
+    if (!content) return null;
+    var match = content.match(/!\[.*?\]\((.*?)\)/);
+    return match ? match[1] : null;
+  }
+  
+  // Reading Time Calculator
+  function calculateReadingTime(content) {
+    if (!content) return 1;
+    // Chinese: ~400 chars/min, English: ~200 words/min
+    var text = content.replace(/!\[.*?\]\(.*?\)/g, "").replace(/\[.*?\]\(.*?\)/g, "").replace(/`[^`]*`/g, "");
+    var chineseChars = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+    var englishWords = (text.match(/[a-zA-Z]+/g) || []).length;
+    var minutes = Math.ceil(chineseChars / 400 + englishWords / 200);
+    return Math.max(1, minutes);
+  }
+  
+  // Render Post Tags
+  function renderPostTags(tags) {
+    var container = document.getElementById("post-tags");
+    if (!container) return;
+    
+    var tagList = [];
+    try {
+      tagList = JSON.parse(tags || "[]");
+    } catch (e) {
+      tagList = [];
+    }
+    
+    if (tagList.length === 0) {
+      container.classList.add("hidden");
+      return;
+    }
+    
+    container.classList.remove("hidden");
+    container.innerHTML = tagList.map(function(tag) {
+      return '<a class="post-tag" href="./index.html?tag=' + encodeURIComponent(tag) + '">#' + escapeHtml(tag) + '</a>';
+    }).join("");
+  }
+  
+  // Load Related Posts
+  async function loadRelatedPosts(currentPost) {
+    var section = document.getElementById("related-posts-section");
+    var list = document.getElementById("related-posts-list");
+    if (!section || !list) return;
+    
+    try {
+      var result = await callApi("listPosts", { page: 1, pageSize: 5 });
+      var related = (result.posts || [])
+        .filter(function(p) { return p.id !== currentPost.id; })
+        .slice(0, 3);
+      
+      if (related.length === 0) {
+        section.classList.add("hidden");
+        return;
+      }
+      
+      section.classList.remove("hidden");
+      list.innerHTML = related.map(function(post) {
+        return [
+          '<article class="entry-card entry-card-compact">',
+          '  <a class="entry-link" href="./post.html?id=' + escapeHtml(post.id) + '">',
+          '    <div class="entry-title">' + escapeHtml(post.title) + '</div>',
+          '    <div class="entry-meta">' + escapeHtml(formatDate(post.publishedAt)) + '</div>',
+          '  </a>',
+          '</article>'
+        ].join("");
+      }).join("");
+    } catch (e) {
+      section.classList.add("hidden");
+    }
+  }
+  
+  // Social Sharing
+  function setupSocialSharing(post) {
+    var pageUrl = encodeURIComponent(window.location.href);
+    var title = encodeURIComponent(post.title);
+    
+    var copyBtn = document.getElementById("copy-link-btn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", function() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+          copyBtn.classList.add("copied");
+          copyBtn.querySelector("span").textContent = "已复制";
+          setTimeout(function() {
+            copyBtn.classList.remove("copied");
+            copyBtn.querySelector("span").textContent = "复制链接";
+          }, 2000);
+        });
+      });
+    }
+    
+    var twitterBtn = document.getElementById("share-twitter-btn");
+    if (twitterBtn) {
+      twitterBtn.addEventListener("click", function() {
+        window.open("https://twitter.com/intent/tweet?url=" + pageUrl + "&text=" + title, "_blank");
+      });
+    }
+    
+    var weiboBtn = document.getElementById("share-weibo-btn");
+    if (weiboBtn) {
+      weiboBtn.addEventListener("click", function() {
+        window.open("https://service.weibo.com/share/share.php?url=" + pageUrl + "&title=" + title, "_blank");
+      });
+    }
+  }
+  
+  // Render Tags Cloud
+  async function renderTagsCloud() {
+    var container = document.getElementById("tags-list");
+    if (!container) return;
+    
+    try {
+      var result = await callApi("getTags", {});
+      var tags = result.tags || [];
+      
+      if (tags.length === 0) {
+        container.classList.add("hidden");
+        return;
+      }
+      
+      container.classList.remove("hidden");
+      container.innerHTML = tags.slice(0, 20).map(function(tag) {
+        return '<a class="tag-link" href="./index.html?tag=' + encodeURIComponent(tag.name) + '">#' + escapeHtml(tag.name) + ' <span class="tag-count">' + tag.count + '</span></a>';
+      }).join("");
+    } catch (e) {
+      container.classList.add("hidden");
     }
   }
 

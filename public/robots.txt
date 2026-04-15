@@ -1,4 +1,12 @@
+# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
 
+# Disallow admin pages from indexing
+Disallow: /admin.html
+
+# Sitemap location
 Sitemap: https://blog.03518888.xyz/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1
