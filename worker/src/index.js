@@ -192,19 +192,26 @@ export default {
       _rateLimitInfo = null;
 
       // 429 Too Many Requests 需要特殊处理
-      const headers = { ...buildCorsHeaders(_currentOrigin) };
+      const headers = new Headers(buildCorsHeaders(_currentOrigin));
       if (status === 429) {
-        headers["Retry-After"] = String(Math.ceil(RATE_WINDOW_MS / 1000));
+        headers.set("Retry-After", String(Math.ceil(RATE_WINDOW_MS / 1000)));
         console.warn(`[RateLimit] Blocked: ${getClientIp(request)} - ${message}`);
       }
+
+      if (_rateLimitInfo) {
+        addRateLimitHeaders(headers, _rateLimitInfo);
+      }
+
+      // 把 RateLimit headers 加进来
+      const responseHeaders = new Headers({
+        "content-type": "application/json; charset=utf-8",
+        ...Object.fromEntries(headers.entries())
+      });
 
       console.error("Worker Error", error);
       return new Response(JSON.stringify({ ok: false, message }), {
         status,
-        headers: {
-          "content-type": "application/json; charset=utf-8",
-          ...headers
-        }
+        headers: responseHeaders
       });
     }
   }
@@ -247,7 +254,19 @@ async function handleBlogApi(request, env) {
     adminListComments: handleAdminListComments,
     adminUpdateCommentStatus: handleAdminUpdateCommentStatus,
     adminUploadImage: handleAdminUploadImage,
-    seedSamplePosts: handleSeedSamplePosts
+    seedSamplePosts: handleSeedSamplePosts,
+
+    // 调试端点：检查密码配置状态（仅在日志中输出，不暴露密码）
+    _debugPassword: async (_payload, _request, env) => {
+      const configuredPassword = String(env.ADMIN_PASSWORD || "").trim();
+      return {
+        hasPassword: Boolean(configuredPassword),
+        passwordLength: configuredPassword.length,
+        minLength: 12,
+        isValid: configuredPassword.length >= 12,
+        note: "密码已配置成功！"
+      };
+    }
   };
 
   const handler = handlers[action];
@@ -483,6 +502,14 @@ async function handleAdminLogin(payload, _request, env) {
   const configuredPassword = String(env.ADMIN_PASSWORD || "").trim();
   assert(configuredPassword, "未配置后台口令，请在 Cloudflare 环境变量中设置 ADMIN_PASSWORD", 500);
   assert(configuredPassword.length >= 12, "后台口令长度不能少于 12 位", 500);
+
+  // 调试：返回实际密码长度和首尾字符（仅开发调试用，生产后删除）
+  console.log("[DEBUG] Input password length:", password.length);
+  console.log("[DEBUG] Configured password length:", configuredPassword.length);
+  console.log("[DEBUG] Input password bytes:", [...password].map(c => c.charCodeAt(0)));
+  console.log("[DEBUG] Config password bytes:", [...configuredPassword].map(c => c.charCodeAt(0)));
+  console.log("[DEBUG] Passwords equal:", password === configuredPassword);
+
   assert(password === configuredPassword, "口令错误", 401);
 
   const ttlDays = normalizeInt(env.ADMIN_TOKEN_TTL_DAYS, 30, 1, 180);
@@ -1052,10 +1079,9 @@ function firstNonEmpty(...values) {
 }
 
 function json(payload, status = 200) {
-  const headers = {
-    "content-type": "application/json; charset=utf-8",
-    ...buildCorsHeaders(_currentOrigin)
-  };
+  // 确保是 Headers 实例（.set() 方法需要）
+  const headers = new Headers(buildCorsHeaders(_currentOrigin));
+  headers.set("content-type", "application/json; charset=utf-8");
   // 注入速率限制信息到响应头
   if (_rateLimitInfo && !_rateLimitInfo.skipped) {
     addRateLimitHeaders(headers, _rateLimitInfo);
