@@ -109,28 +109,48 @@ async function handleListPosts(payload, _request, env) {
   const search = sanitizeText(payload.search, 100);
   
   let whereClause = "status = 'published'";
-  let params = [];
+  let searchParam = null;
   
   if (search) {
     whereClause += " AND (title LIKE ?1 OR content LIKE ?1 OR excerpt LIKE ?1)";
-    params.push(`%${search}%`);
+    searchParam = `%${search}%`;
   }
 
-  const listResult = await db
-    .prepare(`
-      SELECT id, slug, title, excerpt, content, status, published_at, updated_at
-      FROM posts
-      WHERE ${whereClause}
-      ORDER BY published_at DESC
-      LIMIT ?2 OFFSET ?3
-    `)
-    .bind(...params, pageSize, offset)
-    .all();
+  // 根据是否有搜索参数，使用不同的查询
+  let listResult, countResult;
+  
+  if (searchParam) {
+    listResult = await db
+      .prepare(`
+        SELECT id, slug, title, excerpt, content, status, published_at, updated_at
+        FROM posts
+        WHERE ${whereClause}
+        ORDER BY published_at DESC
+        LIMIT ?2 OFFSET ?3
+      `)
+      .bind(searchParam, pageSize, offset)
+      .all();
 
-  const countResult = await db
-    .prepare(`SELECT COUNT(*) AS total FROM posts WHERE ${whereClause}`)
-    .bind(...params)
-    .first();
+    countResult = await db
+      .prepare(`SELECT COUNT(*) AS total FROM posts WHERE ${whereClause}`)
+      .bind(searchParam)
+      .first();
+  } else {
+    listResult = await db
+      .prepare(`
+        SELECT id, slug, title, excerpt, content, status, published_at, updated_at
+        FROM posts
+        WHERE status = 'published'
+        ORDER BY published_at DESC
+        LIMIT ?1 OFFSET ?2
+      `)
+      .bind(pageSize, offset)
+      .all();
+
+    countResult = await db
+      .prepare(`SELECT COUNT(*) AS total FROM posts WHERE status = 'published'`)
+      .first();
+  }
 
   const posts = (listResult.results || []).map(mapPostRow);
   const total = Number((countResult && countResult.total) || 0);
