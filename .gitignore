@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.wrangler/
+
+# IDE
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.dev.vars
+.dev.vars.local
+
+# Working directories
+.inspect-repo/
+.push-work/
+.push-work*/

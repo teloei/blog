@@ -1,0 +1,12 @@
+﻿{
+  "name": "xiaogai-clone-cloudflare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "1:1 clone for xiaogai.fun (Cloudflare Pages + Workers + lightweight CMS)",
+  "scripts": {
+    "dev:pages": "npx wrangler pages dev public --port 8788",
+    "dev:worker": "npx wrangler dev --config worker/wrangler.toml",
+    "deploy:worker": "npx wrangler deploy --config worker/wrangler.toml",
+    "db:migrate:local": "npx wrangler d1 execute xiaogai-blog --local --file worker/schema.sql --config worker/wrangler.toml"
+  }
+}
