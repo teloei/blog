@@ -1,9 +1,32 @@
 ﻿import { SAMPLE_POSTS } from "./sample-posts.js";
 
+// 仅允许以下域名跨域访问 API（安全：防止其他网站调用）
+const ALLOWED_ORIGINS = [
+  "https://blog.03518888.xyz",        // 自定义域名（主要）
+  "https://blog.teloei35.workers.dev" // Worker 直连域名
+];
+
+// 当前请求的 origin，fetch 入口处设置，供 json() 使用
+let _currentOrigin = ALLOWED_ORIGINS[0];
+
+// 速率限制信息，由 checkRateLimit 设置，json() 读取并注入响应头
+let _rateLimitInfo = null;
+
+function buildCorsHeaders(origin) {
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : (ALLOWED_ORIGINS[0] || "");
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Max-Age": "86400"
+  };
+}
+
 const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGINS[0],
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Max-Age": "86400"
 };
 
 const MAX_PAGE_SIZE = 50;
@@ -18,7 +41,118 @@ const MIME_TO_EXT = {
   "image/avif": "avif"
 };
 
+// 图片文件头魔数验证（防扩展名伪造）
+const MAGIC_NUMBERS = {
+  jpg:  [0xFF, 0xD8, 0xFF],
+  jpeg: [0xFF, 0xD8, 0xFF],
+  png:  [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
+  webp: [0x52, 0x49, 0x46, 0x46],  // RIFF....WEBP
+  gif:  [0x47, 0x49, 0x46, 0x38],  // GIF8
+  avif: [0x00, 0x00, 0x00],        // 需要检测 ftyp box
+  svg:  null                         // SVG 是文本，不做二进制验证
+};
+
+function validateMagicNumber(bytes, extension) {
+  const magic = MAGIC_NUMBERS[extension];
+  if (!magic) return false;
+
+  // SVG：检查是否为 XML 文本
+  if (extension === "svg") {
+    const text = new TextDecoder("utf-8", { fatal: false })
+      .decode(bytes.slice(0, 4096));
+    return text.trim().startsWith("<svg") || text.trim().startsWith("<?xml");
+  }
+
+  // AVIF：检查是否为 MP4/MIFF 文件（avif 实际是 HEIF 容器）
+  if (extension === "avif") {
+    // 跳过前 4 字节 size，检查 ftyp box
+    if (bytes.length < 12) return false;
+    const ftyp = String.fromCharCode(
+      bytes[4], bytes[5], bytes[6], bytes[7]
+    );
+    return ftyp === "ftyp";
+  }
+
+  // 其他格式：前缀匹配
+  for (let i = 0; i < magic.length; i++) {
+    if (bytes[i] !== magic[i]) return false;
+  }
+  return true;
+}
+
 const hmacKeyCache = new Map();
+
+// ─── 速率限制配置 ───────────────────────────────────────────────
+const RATE_LIMIT_KV = "ratelimit";  // KV 命名空间名称（需在 wrangler.toml 绑定）
+const RATE_WINDOW_MS = 60_000;      // 时间窗口：60 秒
+const RATE_MAX_REQUESTS = 30;        // 每窗口最多请求次数（安全阈值）
+const RATE_MAX_AUTH = 5;            // 登录接口更严格：5次/分钟
+
+function getRateLimitKey(ip, action) {
+  const bucket = Math.floor(Date.now() / RATE_WINDOW_MS);
+  return `rl:${bucket}:${ip}:${action || "default"}`;
+}
+
+async function checkRateLimit(request, action, env) {
+  const ip = getClientIp(request);
+  const key = getRateLimitKey(ip, action);
+  const max = (action === "adminLogin") ? RATE_MAX_AUTH : RATE_MAX_REQUESTS;
+
+  try {
+    const kv = env[RATE_LIMIT_KV];
+    if (!kv) {
+      // 未绑定 KV 时跳过限流（本地开发友好）
+      _rateLimitInfo = { remaining: max, limit: max, skipped: true };
+      return;
+    }
+
+    const raw = await kv.get(key);
+    const count = raw ? parseInt(raw, 10) : 0;
+
+    if (count >= max) {
+      const retryAfter = Math.ceil(RATE_WINDOW_MS / 1000);
+      throw new ApiError(
+        `请求过于频繁，请 ${retryAfter} 秒后再试（${count}/${max}）`,
+        429
+      );
+    }
+
+    // 递增计数，设置窗口期 +5s TTL 自动过期
+    await kv.put(key, String(count + 1), {
+      expirationTtl: Math.ceil(RATE_WINDOW_MS / 1000) + 5
+    });
+
+    _rateLimitInfo = { remaining: Math.max(0, max - count - 1), limit: max };
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    console.warn("[RateLimit] KV error:", error.message);
+    _rateLimitInfo = { remaining: max, limit: max, skipped: true };
+  }
+}
+
+function getClientIp(request) {
+  // 优先从 CF-Connecting-IP 取真实 IP（Cloudflare 代理）
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
+  // 其次从 X-Forwarded-For 取第一个 IP
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+
+  // 最后用 X-Real-IP
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
+  return "unknown";
+}
+
+// 响应头注入限流信息
+function addRateLimitHeaders(headers, info) {
+  if (!info) return;
+  headers.set("X-RateLimit-Limit", String(info.limit));
+  headers.set("X-RateLimit-Remaining", String(info.remaining));
+  headers.set("X-RateLimit-Window", String(Math.ceil(RATE_WINDOW_MS / 1000)));
+}
 
 class ApiError extends Error {
   constructor(message, status = 400) {
@@ -31,9 +165,11 @@ export default {
   async fetch(request, env) {
     try {
       const url = new URL(request.url);
+      _currentOrigin = request.headers.get("origin") || ALLOWED_ORIGINS[0];
+      const dynamicCors = buildCorsHeaders(_currentOrigin);
 
       if (request.method === "OPTIONS" && url.pathname === "/blogApi") {
-        return new Response(null, { status: 204, headers: CORS_HEADERS });
+        return new Response(null, { status: 204, headers: dynamicCors });
       }
 
       if (url.pathname === "/blogApi") {
@@ -51,8 +187,25 @@ export default {
         ? error.message
         : (error && error.message) || "服务器内部错误";
 
+      // 重置全局状态
+      _currentOrigin = ALLOWED_ORIGINS[0];
+      _rateLimitInfo = null;
+
+      // 429 Too Many Requests 需要特殊处理
+      const headers = { ...buildCorsHeaders(_currentOrigin) };
+      if (status === 429) {
+        headers["Retry-After"] = String(Math.ceil(RATE_WINDOW_MS / 1000));
+        console.warn(`[RateLimit] Blocked: ${getClientIp(request)} - ${message}`);
+      }
+
       console.error("Worker Error", error);
-      return json({ ok: false, message }, status);
+      return new Response(JSON.stringify({ ok: false, message }), {
+        status,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          ...headers
+        }
+      });
     }
   }
 };
@@ -78,6 +231,9 @@ async function handleBlogApi(request, env) {
 
   const action = String(body.action || "").trim();
   assert(action, "缺少 action 参数");
+
+  // ─── 速率限制检查（POST 请求）───────────────────────────────────
+  await checkRateLimit(request, action, env);
 
   const handlers = {
     listPosts: handleListPosts,
@@ -249,6 +405,22 @@ async function handleCreateComment(payload, _request, env) {
   const content = sanitizeText(payload.content, 600);
   assert(content, "内容不能为空");
 
+  // ─── 垃圾评论过滤（管理员除外）──────────────────────────────────
+  if (!isAdmin) {
+    const spamPatterns = [
+      /\b(微信|wechat|qq号|qq\s*\d|电话号码|手机号|联系我)\b/gi,
+      /\b(兼职|刷单|日结|日赚|躺赚|投资回报)\b/gi,
+      /\b(http|https|www\.)\S{30,}/gi,  // 超长 URL
+      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{5,}/g  // 邮箱地址
+    ];
+
+    for (const pattern of spamPatterns) {
+      if (pattern.test(content)) {
+        throw new ApiError("内容包含敏感信息，提交失败");
+      }
+    }
+  }
+
   const author = isAdmin
     ? "忒卷"
     : sanitizeText(payload.author, 24);
@@ -269,17 +441,24 @@ async function handleCreateComment(payload, _request, env) {
   const now = nowShanghaiIso();
   const id = crypto.randomUUID();
 
+  // ─── 新评论默认待审核（pending），管理员除外 ────────────────────
+  const status = isAdmin ? "visible" : "pending";
+
   await db
     .prepare(`
       INSERT INTO comments (
         id, post_id, parent_id, author, author_role, content, status, created_at, updated_at
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'visible', ?7, ?7)
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)
     `)
-    .bind(id, post.id, parentId || null, author, isAdmin ? "author" : "visitor", content, now)
+    .bind(id, post.id, parentId || null, author, isAdmin ? "author" : "visitor", content, status, now)
     .run();
 
+  const message = isAdmin
+    ? "留言已提交，已显示在下方。"
+    : "留言已提交，待管理员审核后显示。";
+
   return {
-    message: "留言已提交，已显示在下方。",
+    message,
     comment: {
       id,
       postId: post.id,
@@ -290,7 +469,7 @@ async function handleCreateComment(payload, _request, env) {
       authorRole: isAdmin ? "author" : "visitor",
       isAuthor: isAdmin,
       content,
-      status: "visible",
+      status,
       createdAt: now,
       updatedAt: now
     }
@@ -301,7 +480,9 @@ async function handleAdminLogin(payload, _request, env) {
   const password = sanitizeText(payload.password, 128);
   assert(password, "请输入后台口令");
 
-  const configuredPassword = (env.ADMIN_PASSWORD || "xiaogai123").trim();
+  const configuredPassword = String(env.ADMIN_PASSWORD || "").trim();
+  assert(configuredPassword, "未配置后台口令，请在 Cloudflare 环境变量中设置 ADMIN_PASSWORD", 500);
+  assert(configuredPassword.length >= 12, "后台口令长度不能少于 12 位", 500);
   assert(password === configuredPassword, "口令错误", 401);
 
   const ttlDays = normalizeInt(env.ADMIN_TOKEN_TTL_DAYS, 30, 1, 180);
@@ -541,6 +722,21 @@ async function handleAdminUploadImage(payload, request, env) {
   assert(bytes.byteLength > 0, "图片内容为空");
   assert(bytes.byteLength <= MAX_UPLOAD_BYTES, "图片不能超过 20MB");
 
+  // ─── Magic Number 验证（防扩展名伪造）────────────────────────────
+  if (!validateMagicNumber(bytes, extension)) {
+    throw new ApiError("图片内容与文件格式不匹配");
+  }
+
+  // ─── SVG 安全检查（防止 XSS）────────────────────────────────────
+  if (extension === "svg") {
+    const text = new TextDecoder("utf-8", { fatal: false })
+      .decode(bytes.slice(0, 8192));
+    // 禁止 SVG 中的脚本和外部引用
+    if (/script|xlink:href|on\w+=|data:image|import\s/i.test(text)) {
+      throw new ApiError("SVG 文件包含危险内容，禁止上传");
+    }
+  }
+
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
@@ -655,7 +851,7 @@ async function handleGetRss(request, env) {
     headers: {
       "content-type": "application/rss+xml; charset=utf-8",
       "cache-control": "public, max-age=300",
-      ...CORS_HEADERS
+      ...buildCorsHeaders(request.headers.get("origin") || "")
     }
   });
 }
@@ -856,13 +1052,17 @@ function firstNonEmpty(...values) {
 }
 
 function json(payload, status = 200) {
-  return new Response(JSON.stringify(payload), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      ...CORS_HEADERS
-    }
-  });
+  const headers = {
+    "content-type": "application/json; charset=utf-8",
+    ...buildCorsHeaders(_currentOrigin)
+  };
+  // 注入速率限制信息到响应头
+  if (_rateLimitInfo && !_rateLimitInfo.skipped) {
+    addRateLimitHeaders(headers, _rateLimitInfo);
+  }
+  // 重置，避免影响下一次请求
+  _rateLimitInfo = null;
+  return new Response(JSON.stringify(payload), { status, headers });
 }
 
 function assert(condition, message, status = 400) {
