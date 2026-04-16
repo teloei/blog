@@ -621,7 +621,7 @@
       { label: "RSS", href: "/blogApi?action=getRss" },
       { label: "小红书", href: "https://www.xiaohongshu.com/user/profile/61ec2a3a000000001000868f", target: "_blank" },
       { label: "邮箱", href: "mailto:gainubi@gmail.com" },
-      { label: "GitHub", href: "https://github.com/", target: "_blank" },
+      { label: "GitHub", href: "https://github.com/teloei", target: "_blank" },
       { label: "哔哩哔哩", href: "https://space.bilibili.com/", target: "_blank" }
     ];
 
@@ -665,6 +665,12 @@
 
   async function initHomePage() {
     renderConnectLinks();
+
+    // 隐藏骨架屏
+    var skeleton = document.getElementById("posts-skeleton");
+    function hideSkeleton() {
+      if (skeleton) skeleton.style.display = "none";
+    }
 
     var pageSize = 10;
     var params = new URLSearchParams(window.location.search);
@@ -793,6 +799,7 @@
 
     function renderHomePosts(postsToRender) {
       postsToRender = postsToRender || posts;
+      hideSkeleton(); // 渲染真实内容前移除骨架屏
 
       if (!postsToRender.length) {
         empty.classList.remove("hidden");
@@ -1980,6 +1987,9 @@
       } else {
         btn.classList.remove("visible");
       }
+      
+      // Update reading progress
+      updateReadingProgress();
     }
     
     window.addEventListener("scroll", checkScroll, { passive: true });
@@ -1987,6 +1997,18 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
     checkScroll();
+  }
+  
+  // Reading progress bar
+  function updateReadingProgress() {
+    var progress = document.getElementById("reading-progress");
+    if (!progress) return;
+    
+    var scrollTop = window.scrollY;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var percent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    
+    progress.style.width = percent + "%";
   }
 
   // Footer year replacement

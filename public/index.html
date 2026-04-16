@@ -119,7 +119,21 @@
         <button class="subtle-link" id="search-close" type="button">取消</button>
       </div>
       
-      <div id="posts-list" class="entries"></div>
+      <div id="posts-list" class="entries">
+        <!-- 骨架屏：API 加载前展示 -->
+        <div id="posts-skeleton" class="entries">
+          <div class="entry-card skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text" style="width:60%"></div>
+          </div>
+          <div class="entry-card skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text" style="width:55%"></div>
+          </div>
+        </div>
+      </div>
       <div id="posts-empty" class="empty-state hidden">还没有发布文章。你可以先去后台写第一篇。</div>
       <div id="home-posts-pagination" class="home-pagination"></div>
     </section>

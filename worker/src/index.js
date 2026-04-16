@@ -225,8 +225,11 @@ async function handleBlogApi(request, env) {
     if (action === "getRss") {
       return await handleGetRss(request, env);
     }
+    if (action === "getSitemap") {
+      return await handleGetSitemap(null, request, env);
+    }
 
-    throw new ApiError("GET 仅支持 action=getRss", 405);
+    throw new ApiError("GET 仅支持 action=getRss / getSitemap", 405);
   }
 
   if (request.method !== "POST") {
@@ -246,6 +249,7 @@ async function handleBlogApi(request, env) {
     listPosts: handleListPosts,
     getPost: handleGetPost,
     getTags: handleGetTags,
+    getSitemap: handleGetSitemap,
     createComment: handleCreateComment,
     adminLogin: handleAdminLogin,
     adminListPosts: handleAdminListPosts,
@@ -256,8 +260,14 @@ async function handleBlogApi(request, env) {
     adminUploadImage: handleAdminUploadImage,
     seedSamplePosts: handleSeedSamplePosts,
 
-    // 调试端点：检查密码配置状态（仅在日志中输出，不暴露密码）
-    _debugPassword: async (_payload, _request, env) => {
+    // 调试端点：仅在请求带 X-DEBUG:1 头且 env.ADMIN_DEBUG secret 存在时可用
+    _debugPassword: async (payload, request, env) => {
+      // 安全守卫：必须有 X-DEBUG header + ADMIN_DEBUG secret
+      const debugHeader = request.headers.get("x-debug") || "";
+      const hasDebugSecret = Boolean(String(env.ADMIN_DEBUG || "").trim());
+      if (debugHeader !== "1" || !hasDebugSecret) {
+        throw new ApiError("不支持的 action: _debugPassword", 400);
+      }
       const configuredPassword = String(env.ADMIN_PASSWORD || "").trim();
       return {
         hasPassword: Boolean(configuredPassword),
@@ -273,6 +283,8 @@ async function handleBlogApi(request, env) {
   assert(typeof handler === "function", `不支持的 action: ${action}`);
 
   const result = await handler(body, request, env);
+  // handleGetSitemap 等直接返回 Response，跳过 json() 包装
+  if (result instanceof Response) return result;
   return json({ ok: true, ...(result || {}) });
 }
 
@@ -282,68 +294,105 @@ async function handleListPosts(payload, _request, env) {
   const pageSize = normalizeInt(payload.pageSize, 10, 1, MAX_PAGE_SIZE);
   const offset = (page - 1) * pageSize;
   const search = sanitizeText(payload.search, 100);
-  
+  const tag = sanitizeText(payload.tag, 50);
+
   let whereClause = "status = 'published'";
   let searchParam = null;
-  
+  let tagParam = null;
+
   if (search) {
     whereClause += " AND (title LIKE ?1 OR content LIKE ?1 OR excerpt LIKE ?1)";
     searchParam = `%${search}%`;
   }
 
-  // 根据是否有搜索参数，使用不同的查询
-  let listResult, countResult;
-  
-  if (searchParam) {
+  if (tag) {
+    whereClause += " AND (tags LIKE ?2)";
+    tagParam = `%${tag}%`;
+  }
+
+  // ── 列表查询（根据参数数量走不同分支，避免参数顺序错位）──
+  let listResult;
+
+  if (search && tag) {
+    // ?1 = search, ?2 = tag, ?3 = pageSize, ?4 = offset
     listResult = await db
-      .prepare(`
-        SELECT id, slug, title, excerpt, content, status, published_at, updated_at
-        FROM posts
-        WHERE ${whereClause}
-        ORDER BY published_at DESC
-        LIMIT ?2 OFFSET ?3
-      `)
+      .prepare(`SELECT id, slug, title, excerpt, content, status, published_at, updated_at, tags FROM posts WHERE ${whereClause} ORDER BY published_at DESC LIMIT ?3 OFFSET ?4`)
+      .bind(searchParam, tagParam, pageSize, offset)
+      .all();
+    const countRow = await db.prepare(`SELECT COUNT(*) AS total FROM posts WHERE ${whereClause}`).bind(searchParam, tagParam).first();
+    var total = Number((countRow && countRow.total) || 0);
+  } else if (search) {
+    // ?1 = search, ?2 = pageSize, ?3 = offset
+    listResult = await db
+      .prepare(`SELECT id, slug, title, excerpt, content, status, published_at, updated_at, tags FROM posts WHERE ${whereClause} ORDER BY published_at DESC LIMIT ?2 OFFSET ?3`)
       .bind(searchParam, pageSize, offset)
       .all();
-
-    countResult = await db
-      .prepare(`SELECT COUNT(*) AS total FROM posts WHERE ${whereClause}`)
-      .bind(searchParam)
-      .first();
-  } else {
+    const countRow = await db.prepare(`SELECT COUNT(*) AS total FROM posts WHERE ${whereClause}`).bind(searchParam).first();
+    var total = Number((countRow && countRow.total) || 0);
+  } else if (tag) {
+    // ?1 = tag, ?2 = pageSize, ?3 = offset
     listResult = await db
-      .prepare(`
-        SELECT id, slug, title, excerpt, content, status, published_at, updated_at
-        FROM posts
-        WHERE status = 'published'
-        ORDER BY published_at DESC
-        LIMIT ?1 OFFSET ?2
-      `)
+      .prepare(`SELECT id, slug, title, excerpt, content, status, published_at, updated_at, tags FROM posts WHERE ${whereClause} ORDER BY published_at DESC LIMIT ?2 OFFSET ?3`)
+      .bind(tagParam, pageSize, offset)
+      .all();
+    const countRow = await db.prepare(`SELECT COUNT(*) AS total FROM posts WHERE ${whereClause}`).bind(tagParam).first();
+    var total = Number((countRow && countRow.total) || 0);
+  } else {
+    // 无搜索无标签：最简单分支
+    listResult = await db
+      .prepare(`SELECT id, slug, title, excerpt, content, status, published_at, updated_at, tags FROM posts WHERE status = 'published' ORDER BY published_at DESC LIMIT ?1 OFFSET ?2`)
       .bind(pageSize, offset)
       .all();
-
-    countResult = await db
-      .prepare(`SELECT COUNT(*) AS total FROM posts WHERE status = 'published'`)
-      .first();
+    const countRow = await db.prepare(`SELECT COUNT(*) AS total FROM posts WHERE status = 'published'`).first();
+    var total = Number((countRow && countRow.total) || 0);
   }
 
   const posts = (listResult.results || []).map(mapPostRow);
-  const total = Number((countResult && countResult.total) || 0);
 
   return { posts, total };
 }
 
+// 动态 sitemap（由 functions/sitemap.xml.js 代理调用）
+async function handleGetSitemap(_payload, _request, env) {
+  const db = getDb(env);
+  const siteUrl = "https://blog.03518888.xyz";
+  const postsResult = await db
+    .prepare(`SELECT slug, title, published_at FROM posts WHERE status = 'published' ORDER BY published_at DESC`)
+    .all();
+
+  const postUrls = (postsResult.results || []).map(function(row) {
+    const loc = escapeXml(siteUrl + "/post.html?id=" + encodeURIComponent(row.slug || row.id));
+    const lastmod = escapeXml(String(row.published_at || "").slice(0, 10));
+    return `<url><loc>${loc}</loc><lastmod>${lastmod}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>`;
+  });
+
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    `<url><loc>${escapeXml(siteUrl + "/")}</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`,
+    `<url><loc>${escapeXml(siteUrl + "/admin.html")}</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>`,
+    ...postUrls,
+    '</urlset>'
+  ].join("\n");
+
+  const headers = new Headers(buildCorsHeaders(_currentOrigin));
+  headers.set("content-type", "application/xml; charset=utf-8");
+  headers.set("cache-control", "public, max-age=3600");
+
+  return new Response(xml, { headers });
+}
+
 async function handleGetTags(payload, _request, env) {
   const db = getDb(env);
-  
+
   // 简单实现：从文章内容中提取标签
   const result = await db
     .prepare(`
-      SELECT tags FROM posts 
+      SELECT tags FROM posts
       WHERE status = 'published' AND tags != '[]'
     `)
     .all();
-  
+
   const tagCount = {};
   (result.results || []).forEach(function(row) {
     try {
@@ -353,7 +402,7 @@ async function handleGetTags(payload, _request, env) {
       });
     } catch (e) {}
   });
-  
+
   const tags = Object.entries(tagCount)
     .map(function(entry) {
       return { name: entry[0], count: entry[1] };
@@ -361,7 +410,7 @@ async function handleGetTags(payload, _request, env) {
     .sort(function(a, b) {
       return b.count - a.count;
     });
-  
+
   return { tags };
 }
 
@@ -502,14 +551,6 @@ async function handleAdminLogin(payload, _request, env) {
   const configuredPassword = String(env.ADMIN_PASSWORD || "").trim();
   assert(configuredPassword, "未配置后台口令，请在 Cloudflare 环境变量中设置 ADMIN_PASSWORD", 500);
   assert(configuredPassword.length >= 12, "后台口令长度不能少于 12 位", 500);
-
-  // 调试：返回实际密码长度和首尾字符（仅开发调试用，生产后删除）
-  console.log("[DEBUG] Input password length:", password.length);
-  console.log("[DEBUG] Configured password length:", configuredPassword.length);
-  console.log("[DEBUG] Input password bytes:", [...password].map(c => c.charCodeAt(0)));
-  console.log("[DEBUG] Config password bytes:", [...configuredPassword].map(c => c.charCodeAt(0)));
-  console.log("[DEBUG] Passwords equal:", password === configuredPassword);
-
   assert(password === configuredPassword, "口令错误", 401);
 
   const ttlDays = normalizeInt(env.ADMIN_TOKEN_TTL_DAYS, 30, 1, 180);
@@ -1023,7 +1064,8 @@ function mapPostRow(row) {
     content: row.content || "",
     status: row.status || "published",
     publishedAt: row.published_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
+    tags: row.tags || "[]"
   };
 }
 
