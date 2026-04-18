@@ -652,6 +652,12 @@
     var icons = window.__blogEffects && window.__blogEffects.PLATFORM_ICONS || {};
     var typeMap = window.__blogEffects && window.__blogEffects.TYPE_CLASS_MAP || {};
 
+    // 过滤掉 X/Twitter
+    links = links.filter(function (item) {
+      var t = (item.type || "").toLowerCase();
+      return t !== "x" && t !== "twitter";
+    });
+
     // 渲染主列表
     container.innerHTML = '<div class="connect-items"></div>';
     var itemsContainer = container.querySelector(".connect-items");
