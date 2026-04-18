@@ -646,25 +646,172 @@
       .filter(Boolean);
   }
 
+  // ─── Connect 模块渲染（带平台图标 + 微信弹窗） ───────────────
   function renderConnectLinks() {
     var container = document.getElementById("connect-links");
     if (!container) return;
 
     var links = resolveConnectLinks();
-    container.innerHTML = links.map(function (item) {
-      var attrs = "";
-      if (item.target) {
-        attrs += ' target="' + escapeHtml(item.target) + '"';
+    var icons = window.__blogEffects && window.__blogEffects.PLATFORM_ICONS || {};
+    var typeMap = window.__blogEffects && window.__blogEffects.TYPE_CLASS_MAP || {};
+
+    // 渲染主列表
+    container.innerHTML = '<div class="connect-items"></div>';
+    var itemsContainer = container.querySelector(".connect-items");
+    if (!itemsContainer) return;
+
+    links.forEach(function (item) {
+      var type = item.type || "default";
+      var iconClass = typeMap[type] || "icon-default";
+      var iconSvg = icons[type] || ('<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>');
+      var isWechat = (type === "wechat");
+      var isExternal = item.href && /^https?:\/\//i.test(item.href) && !item.href.startsWith(window.location.origin) && !item.href.startsWith("/");
+      var isMail = type === "mail";
+      var isRss = type === "rss";
+
+      var arrowSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+
+      var el = document.createElement(isWechat ? "button" : "a");
+
+      if (isWechat) {
+        el.className = "connect-item connect-item-wechat";
+        el.type = "button";
+        el.setAttribute("aria-label", "关注微信公众号");
+        var qrUrl = item.qr || item.href;
+        el.dataset.qr = qrUrl;
+        el.addEventListener("click", function () {
+          showWechatPopup(item.qr || item.href, item.label || "微信公众号");
+        });
+      } else {
+        el.className = "connect-item";
+        el.href = escapeHtml(item.href);
+        if (isExternal || isMail || isRss) {
+          el.target = "_blank";
+          el.rel = "noopener noreferrer";
+        }
       }
-      if (item.target === "_blank") {
-        attrs += ' rel="noopener noreferrer"';
+
+      el.innerHTML = [
+        '<span class="platform-icon ' + iconClass + '">' + iconSvg + '</span>',
+        '<span class="connect-item-info">',
+        '<span class="connect-item-name">' + escapeHtml(item.label) + "</span>",
+        '<span class="connect-item-desc">' + getPlatformDesc(type) + "</span>",
+        "</span>",
+        '<span class="connect-item-arrow">' + arrowSvg + "</span>"
+      ].join("");
+
+      itemsContainer.appendChild(el);
+    });
+
+    // 页面可见时触发动画
+    setTimeout(function () {
+      var items = container.querySelectorAll(".connect-item");
+      items.forEach(function (item, i) {
+        item.style.opacity = "0";
+        item.style.transform = "translateX(-12px)";
+        item.style.transition = "opacity 400ms ease, transform 400ms ease";
+        setTimeout(function () {
+          item.style.opacity = "";
+          item.style.transform = "";
+        }, i * 60);
+      });
+    }, 100);
+  }
+
+  // 平台描述文字
+  function getPlatformDesc(type) {
+    var descs = {
+      rss:          "RSS 订阅更新",
+      wechat:       "扫码关注公众号",
+      xiaohongshu: "小红书主页",
+      github:       "GitHub 开源项目",
+      mail:         "给我写邮件",
+      bilibili:     "B 站视频更新",
+      x:            "Twitter / X 动态",
+      jike:         "即刻社区动态"
+    };
+    return descs[type] || "访问主页";
+  }
+
+  // 微信二维码弹窗
+  function showWechatPopup(qrUrl, title) {
+    // 已有弹窗则关闭
+    var existing = document.getElementById("wechat-popup-overlay");
+    if (existing) { existing.remove(); return; }
+
+    var overlay = document.createElement("div");
+    overlay.id = "wechat-popup-overlay";
+    overlay.className = "wechat-qr-popup";
+    overlay.innerHTML =
+      '<div class="wechat-qr-card">' +
+        '<h3>' + escapeHtml(title) + '</h3>' +
+        '<p>用微信扫码关注</p>' +
+        '<img src="' + escapeHtml(qrUrl) + '" alt="微信公众号二维码" loading="lazy" onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22%3E%3Crect fill=%22%23f5f0eb%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23a39b93%22 font-size=%2214%22%3E请上传二维码图片%3C/text%3E%3C/svg%3E\'">\'">\'">' +
+        '<button id="wechat-popup-close" type="button">关闭</button>' +
+      "</div>";
+
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay || e.target.id === "wechat-popup-close") {
+        overlay.remove();
       }
-      return '<a href="' + escapeHtml(item.href) + '"' + attrs + ">" + escapeHtml(item.label) + "</a>";
-    }).join("");
+    });
+
+    document.body.appendChild(overlay);
+    // 禁止背景滚动
+    document.body.style.overflow = "hidden";
+
+    // ESC 关闭
+    var escHandler = function (e) {
+      if (e.key === "Escape") {
+        overlay.remove();
+        document.removeEventListener("keydown", escHandler);
+        document.body.style.overflow = "";
+      }
+    };
+    document.addEventListener("keydown", escHandler);
+
+    // 关闭时恢复滚动
+    var observer = new MutationObserver(function () {
+      if (!document.getElementById("wechat-popup-overlay")) {
+        document.body.style.overflow = "";
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: false });
+  }
+
+  // 从 API 加载 Connect 配置（失败则用前端配置）
+  async function loadConnectLinks() {
+    var apiUrl = window.XIAOGAI_CLOUDBASE_CONFIG && window.XIAOGAI_CLOUDBASE_CONFIG.apiUrl;
+    if (!apiUrl) { renderConnectLinks(); return; }
+
+    var base = apiUrl.startsWith("/") ? window.location.origin : apiUrl.replace(/\/blogApi$/, "");
+
+    try {
+      var res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getSiteConfig", key: "connect_links" })
+      });
+      var data = await res.json();
+      if (data && data.value) {
+        try {
+          var links = JSON.parse(data.value);
+          if (Array.isArray(links) && links.length) {
+            // 覆盖前端配置
+            if (window.XIAOGAI_CLOUDBASE_CONFIG) {
+              window.XIAOGAI_CLOUDBASE_CONFIG.connectLinks = links;
+            }
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+
+    renderConnectLinks();
   }
 
   async function initHomePage() {
-    renderConnectLinks();
+    loadConnectLinks(); // 从 API 加载 Connect 配置，失败则用前端配置
 
     // 隐藏骨架屏
     var skeleton = document.getElementById("posts-skeleton");
@@ -744,13 +891,27 @@
     // Render tags cloud
     await renderTagsCloud();
 
+    // ── SSR 数据优先，搜索/翻页时走 API ────────────────────────
+    var ssrPosts = (window.__SSR_DATA__ && window.__SSR_DATA__.posts) || null;
+    var ssrTags = (window.__SSR_DATA__ && window.__SSR_DATA__.tags) || [];
+
+    // 若有 SSR 数据且无搜索/标签筛选，先用 SSR 数据
+    var useSsr = Boolean(ssrPosts && ssrPosts.length && !searchQuery && currentPage === 1);
+
     async function loadPage(page) {
+      if (useSsr && page === 1) {
+        // 已渲染，后续分页走 API（SSR 只保证首屏）
+        return ssrPosts;
+      }
       var data = await listPosts({ page: page, pageSize: pageSize, search: searchQuery });
       total = data.total;
       return data.posts;
     }
 
     var posts = await loadPage(currentPage);
+    if (useSsr && total === 0 && ssrPosts) {
+      total = (window.__SSR_DATA__ && window.__SSR_DATA__.totalPages * pageSize) || ssrPosts.length;
+    }
     var totalPages = Math.max(1, Math.ceil(total / pageSize));
 
     if (currentPage > totalPages) {
@@ -850,7 +1011,19 @@
       return;
     }
 
-    var data = await getPost(postId);
+    // ── SSR 数据优先 ────────────────────────────────────────
+    var data;
+    var ssrData = window.__SSR_DATA__;
+    if (ssrData && ssrData.post && (ssrData.post.id === postId || ssrData.post.slug === postId)) {
+      data = ssrData;
+    } else {
+      data = await getPost(postId);
+    }
+
+    if (!data || !data.post) {
+      empty.classList.remove("hidden");
+      return;
+    }
     if (!data.post) {
       empty.classList.remove("hidden");
       return;
@@ -1161,6 +1334,11 @@
   }
 
   async function initAdminPage() {
+    // ── SSR Token 优先（来自 Pages Function _worker.js 鉴权） ──
+    if (window.__ADMIN_TOKEN__) {
+      setAdminToken(window.__ADMIN_TOKEN__);
+    }
+
     var adminParams = new URLSearchParams(window.location.search);
     var editPostId = adminParams.get("edit") || "";
     var loginShell = document.getElementById("admin-login-shell");
@@ -1923,32 +2101,45 @@
   function setupSocialSharing(post) {
     var pageUrl = encodeURIComponent(window.location.href);
     var title = encodeURIComponent(post.title);
-    
-    var copyBtn = document.getElementById("copy-link-btn");
-    if (copyBtn) {
-      copyBtn.addEventListener("click", function() {
-        navigator.clipboard.writeText(window.location.href).then(function() {
-          copyBtn.classList.add("copied");
-          copyBtn.querySelector("span").textContent = "已复制";
-          setTimeout(function() {
-            copyBtn.classList.remove("copied");
-            copyBtn.querySelector("span").textContent = "复制链接";
-          }, 2000);
-        });
+
+    // 微信分享（显示弹窗提示用户截图）
+    var wechatBtn = document.getElementById("share-wechat-btn");
+    if (wechatBtn) {
+      wechatBtn.addEventListener("click", function () {
+        showWechatPopup("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23f5f0eb' width='200' height='200' rx='12'/%3E%3Ctext x='50%25' y='40%25' dominant-baseline='middle' text-anchor='middle' fill='%23a39b93' font-size='13'%3E长按识别二维码%3C/text%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23a39b93' font-size='11'%3E截图保存 → 微信扫码%3C/text%3E%3C/svg%3E", "分享到微信");
       });
     }
-    
+
+    // X / Twitter
     var twitterBtn = document.getElementById("share-twitter-btn");
     if (twitterBtn) {
-      twitterBtn.addEventListener("click", function() {
-        window.open("https://twitter.com/intent/tweet?url=" + pageUrl + "&text=" + title, "_blank");
+      twitterBtn.addEventListener("click", function () {
+        window.open("https://twitter.com/intent/tweet?url=" + pageUrl + "&text=" + title, "_blank", "noopener");
       });
     }
-    
+
+    // 微博
     var weiboBtn = document.getElementById("share-weibo-btn");
     if (weiboBtn) {
-      weiboBtn.addEventListener("click", function() {
-        window.open("https://service.weibo.com/share/share.php?url=" + pageUrl + "&title=" + title, "_blank");
+      weiboBtn.addEventListener("click", function () {
+        window.open("https://service.weibo.com/share/share.php?url=" + pageUrl + "&title=" + title, "_blank", "noopener");
+      });
+    }
+
+    // 小红书（跳转到发布页面）
+    var xhsBtn = document.getElementById("share-xhs-btn");
+    if (xhsBtn) {
+      xhsBtn.addEventListener("click", function () {
+        // 小红书没有公开分享 URL，跳转到主页让用户手动分享
+        window.open("https://www.xiaohongshu.com", "_blank", "noopener");
+      });
+    }
+
+    // 知乎（分享链接）
+    var zhihuBtn = document.getElementById("share-zhihu-btn");
+    if (zhihuBtn) {
+      zhihuBtn.addEventListener("click", function () {
+        window.open("https://www.zhihu.com/share/article?url=" + pageUrl + "&title=" + title, "_blank", "noopener");
       });
     }
   }

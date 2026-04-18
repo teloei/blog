@@ -1,5 +1,5 @@
 -- 博客数据库表结构
--- 支持：文章、评论、标签系统
+-- 支持：文章、评论、标签系统、网站配置
 
 -- 文章表
 CREATE TABLE IF NOT EXISTS posts (
@@ -20,9 +20,6 @@ ON posts(status, published_at DESC);
 -- 标签索引（用于搜索）
 CREATE INDEX IF NOT EXISTS idx_posts_tags
 ON posts(tags);
-
--- 全文搜索支持（使用 LIKE 模糊匹配）
--- SQLite FTS5 需要额外配置，这里用简单方案
 
 -- 评论表
 CREATE TABLE IF NOT EXISTS comments (
@@ -47,9 +44,9 @@ ON comments(parent_id);
 CREATE INDEX IF NOT EXISTS idx_comments_status_created
 ON comments(status, created_at DESC);
 
--- 标签统计表（可选，用于标签云）
-CREATE TABLE IF NOT EXISTS tag_stats (
-  tag TEXT PRIMARY KEY,
-  post_count INTEGER NOT NULL DEFAULT 0,
-  last_used_at TEXT NOT NULL
+-- 网站配置表（Connect 模块等全局配置）
+CREATE TABLE IF NOT EXISTS site_config (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL
 );

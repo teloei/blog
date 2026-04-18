@@ -250,6 +250,7 @@ async function handleBlogApi(request, env) {
     getPost: handleGetPost,
     getTags: handleGetTags,
     getSitemap: handleGetSitemap,
+    getSiteConfig: handleGetSiteConfig,
     createComment: handleCreateComment,
     adminLogin: handleAdminLogin,
     adminListPosts: handleAdminListPosts,
@@ -258,6 +259,9 @@ async function handleBlogApi(request, env) {
     adminListComments: handleAdminListComments,
     adminUpdateCommentStatus: handleAdminUpdateCommentStatus,
     adminUploadImage: handleAdminUploadImage,
+    adminGetSiteConfig: handleAdminGetSiteConfig,
+    adminUpdateSiteConfig: handleAdminUpdateSiteConfig,
+    verifyAdmin: handleVerifyAdmin,
     seedSamplePosts: handleSeedSamplePosts,
 
     // 调试端点：仅在请求带 X-DEBUG:1 头且 env.ADMIN_DEBUG secret 存在时可用
@@ -821,6 +825,52 @@ async function handleAdminUploadImage(payload, request, env) {
     url: buildUploadUrl(request, env, key),
     key
   };
+}
+
+// ── 网站配置 API ─────────────────────────────────────────────
+
+async function handleGetSiteConfig(payload, _request, env) {
+  const db = getDb(env);
+  const key = sanitizeText(payload?.key, 100);
+  let result;
+
+  if (key) {
+    result = await db.prepare("SELECT key, value, updated_at FROM site_config WHERE key = ?1").bind(key).first();
+  } else {
+    const rows = await db.prepare("SELECT key, value, updated_at FROM site_config").all();
+    result = { configs: (rows.results || []).map(r => ({ key: r.key, value: r.value, updated_at: r.updated_at })) };
+  }
+
+  return result || null;
+}
+
+async function handleAdminGetSiteConfig(payload, _request, env) {
+  await requireAdmin(payload.token, env);
+  return await handleGetSiteConfig(payload, null, env);
+}
+
+async function handleAdminUpdateSiteConfig(payload, _request, env) {
+  await requireAdmin(payload.token, env);
+  const db = getDb(env);
+  const key = sanitizeText(payload.key, 100);
+  const value = String(payload.value || "");
+  assert(key, "配置项 key 不能为空");
+
+  const now = new Date(Date.now() + 8 * 3600_000).toISOString().slice(0, 19) + "+08:00";
+
+  await db
+    .prepare(`INSERT INTO site_config (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`)
+    .bind(key, value, now)
+    .run();
+
+  return { success: true, key, updated_at: now };
+}
+
+async function handleVerifyAdmin(payload, _request, env) {
+  const token = String(payload.token || "").trim();
+  if (!token) return { valid: false };
+  const payload_ = await verifyAdminOrNull(token, env);
+  return { valid: Boolean(payload_) };
 }
 
 async function handleSeedSamplePosts(payload, _request, env) {

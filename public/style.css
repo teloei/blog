@@ -12,6 +12,7 @@
   --ease: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-slow: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   
   /* Glassmorphism tokens */
   --radius-sm: 6px;
@@ -22,12 +23,17 @@
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.12), 0 0 1px rgba(255, 255, 255, 0.05);
   --shadow-elevated: 0 12px 48px rgba(0, 0, 0, 0.2), 0 0 1px rgba(255, 255, 255, 0.08);
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-accent-glow: 0 0 20px rgba(234, 88, 12, 0.3);
   --blur-sm: blur(8px);
   --blur-md: blur(16px);
   --blur-lg: blur(24px);
   --glass-bg: rgba(20, 18, 16, 0.65);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-highlight: rgba(255, 255, 255, 0.12);
+
+  /* Particle canvas */
+  --particle-color: rgba(234, 88, 12, 0.15);
+  --cursor-glow-size: 200px;
 }
 
 * {
@@ -71,6 +77,188 @@ body.sunny {
   --accent: #b45309;
   --surface: #f5eee1;
   --surface-strong: rgba(248, 243, 234, 0.98);
+  --particle-color: rgba(180, 83, 9, 0.1);
+  --cursor-glow-size: 200px;
+}
+
+/* ── Particle Canvas ───────────────────────────────────────── */
+#particle-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  transition: opacity 400ms ease;
+}
+
+body.light #particle-canvas,
+body.sunny #particle-canvas {
+  opacity: 0.6;
+}
+
+/* ── Cursor Glow (follows mouse) ──────────────────────────── */
+#cursor-glow {
+  position: fixed;
+  width: var(--cursor-glow-size);
+  height: var(--cursor-glow-size);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--particle-color) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  transition: width 300ms ease, height 300ms ease, background 600ms ease;
+  will-change: transform;
+  opacity: 0;
+}
+
+#cursor-glow.visible {
+  opacity: 1;
+}
+
+/* ── Mouse Trail Particle ─────────────────────────────────── */
+.trail-particle {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.8;
+  transform: translate(-50%, -50%);
+  animation: trail-fade 600ms ease forwards;
+}
+
+@keyframes trail-fade {
+  0%   { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0;   transform: translate(-50%, -50%) scale(0.2); }
+}
+
+/* ── Ripple Button Effect ─────────────────────────────────── */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(0);
+  animation: ripple-expand 500ms ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes ripple-expand {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ── Entrance Animations ──────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scalePop {
+  0%   { opacity: 0; transform: scale(0.92); }
+  70%  { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+/* Scroll-triggered elements */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 600ms var(--ease), transform 600ms var(--ease);
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── WeChat QR Popup ──────────────────────────────────────── */
+.wechat-qr-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: fade-in 200ms ease;
+}
+
+.wechat-qr-popup.hidden {
+  display: none;
+}
+
+.wechat-qr-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  text-align: center;
+  box-shadow: var(--shadow-elevated);
+  animation: scalePop 300ms var(--ease-spring);
+  max-width: 280px;
+  width: 90vw;
+}
+
+.wechat-qr-card h3 {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.wechat-qr-card p {
+  font-size: 13px;
+  color: var(--mid);
+  margin-bottom: 16px;
+}
+
+.wechat-qr-card img {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  display: block;
+  margin: 0 auto 16px;
+}
+
+.wechat-qr-card button {
+  font-size: 13px;
+  color: var(--mid);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.wechat-qr-card button:hover {
+  color: var(--text);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -438,43 +626,188 @@ body.sunny .light-shaft {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CONNECT SECTION - UPGRADED
+/* ═══════════════════════════════════════════════════════════════
+   CONNECT SECTION - REDESIGN
    ═══════════════════════════════════════════════════════════════ */
 .connect-section {
   margin-bottom: 0;
 }
 
-.links {
+/* ── Platform Icon Map ───────────────────────────────────── */
+.platform-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+  transition: background 250ms ease, transform 250ms ease;
+}
+
+.connect-item:hover .platform-icon {
+  transform: scale(1.1);
+}
+
+/* Platform-specific icon colors on hover */
+.connect-item:hover .icon-rss    { background: rgba(234, 88, 12, 0.2); }
+.connect-item:hover .icon-wechat { background: rgba(7, 193, 96, 0.2); }
+.connect-item:hover .icon-xhs    { background: rgba(238, 11, 81, 0.2); }
+.connect-item:hover .icon-github { background: rgba(255, 255, 255, 0.15); }
+.connect-item:hover .icon-mail   { background: rgba(234, 88, 12, 0.2); }
+.connect-item:hover .icon-bilibili { background: rgba(64, 158, 255, 0.2); }
+.connect-item:hover .icon-x      { background: rgba(255, 255, 255, 0.15); }
+.connect-item:hover .icon-jike   { background: rgba(234, 88, 12, 0.2); }
+
+/* Default link hover */
+.connect-item:hover .icon-default { background: rgba(234, 88, 12, 0.2); }
+
+/* SVG icons inside platform icons */
+.platform-icon svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--mid);
+  transition: fill 250ms ease;
+}
+
+.connect-item:hover .platform-icon svg {
+  fill: var(--accent);
+}
+
+.connect-item:hover .icon-github svg { fill: #e8e8e8; }
+.connect-item:hover .icon-bilibili svg { fill: #409eff; }
+.connect-item:hover .icon-wechat svg { fill: #07c160; }
+
+/* ── Connect Items Grid ──────────────────────────────────── */
+.connect-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.connect-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface) 40%, transparent);
+  border: 1px solid transparent;
+  color: var(--mid);
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 300ms var(--ease);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.connect-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  transition: width 300ms var(--ease);
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.connect-item:hover::before {
+  width: 3px;
+}
+
+.connect-item:hover {
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  border-color: color-mix(in srgb, var(--line) 80%, transparent);
+  color: var(--text);
+  transform: translateX(4px);
+}
+
+.connect-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.connect-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  display: block;
+  transition: color 250ms ease;
+}
+
+.connect-item-desc {
+  font-size: 12px;
+  color: var(--mid);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+  transition: color 250ms ease;
+}
+
+.connect-item:hover .connect-item-desc {
+  color: var(--mid);
+}
+
+.connect-item-arrow {
+  color: var(--line);
+  transition: all 250ms ease;
+  opacity: 0;
+  transform: translateX(-4px);
+}
+
+.connect-item:hover .connect-item-arrow {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--accent);
+}
+
+/* WeChat item special: no arrow, shows QR */
+.connect-item-wechat {
+  cursor: pointer;
+}
+
+.connect-item-wechat .connect-item-arrow {
+  display: none;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .connect-item {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .connect-item-desc {
+    display: none;
+  }
+}
+
+/* Desktop: grid layout for larger screens */
+@media (min-width: 640px) {
+  .connect-items {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+@media (min-width: 960px) {
+  .connect-items {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Fallback links style (for RSS etc.) */
+.links-connect {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-}
-
-.links-connect {
-  gap: 8px 16px;
-  align-items: center;
-}
-
-.links-connect a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
-  border: 1px solid var(--line);
-  color: var(--mid);
-  font-size: 13px;
-  line-height: 1.5;
-  transition: all 250ms var(--ease);
-}
-
-.links-connect a:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -666,16 +999,25 @@ body.sunny .light-shaft {
   border-top: 1px solid var(--line);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.share-label {
+  font-size: 13px;
+  color: var(--mid);
+  font-weight: 500;
+  margin-right: 4px;
+  white-space: nowrap;
 }
 
 .share-button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
+  padding: 8px 14px;
   border-radius: var(--radius-md);
-  background: transparent;
+  background: color-mix(in srgb, var(--surface) 50%, transparent);
   border: 1px solid var(--line);
   color: var(--mid);
   font-size: 13px;
@@ -686,13 +1028,38 @@ body.sunny .light-shaft {
 .share-button:hover {
   background: var(--surface);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--text);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
+
+.share-button svg {
+  width: 15px;
+  height: 15px;
+  transition: transform 250ms ease;
+}
+
+.share-button:hover svg {
+  transform: scale(1.1);
+}
+
+/* Platform hover colors */
+.share-button.wechat-btn:hover { border-color: #07c160; color: #07c160; }
+.share-button.weibo-btn:hover   { border-color: #e6162d;  color: #e6162d; }
+.share-button.twitter-btn:hover { border-color: #000;     color: #000; }
+.share-button.xiaohongshu-btn:hover { border-color: #ff2442; color: #ff2442; }
+.share-button.zhihu-btn:hover   { border-color: #0066ff;  color: #0066ff; }
+.share-button.douyin-btn:hover  { border-color: #000;     color: #000; }
 
 .share-button.copied {
   background: var(--ok);
   border-color: var(--ok);
   color: #fff;
+}
+
+/* Share tooltip */
+.share-button[data-tip] {
+  position: relative;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1736,12 +2103,93 @@ body.sunny .post-content blockquote {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   RELATED POSTS
+   RELATED POSTS - ENHANCED
    ═══════════════════════════════════════════════════════════════ */
 .related-section {
-  margin-top: 36px;
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
 }
 
+.related-section .section-title {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--mid);
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.related-card {
+  display: block;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface) 50%, transparent);
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: all 280ms var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.related-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 6%, transparent), transparent);
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+
+.related-card:hover::before {
+  opacity: 1;
+}
+
+.related-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--line));
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.related-card-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 200ms ease;
+}
+
+.related-card:hover .related-card-title {
+  color: var(--accent);
+}
+
+.related-card-date {
+  font-size: 12px;
+  color: var(--mid);
+}
+
+.related-card-tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+/* Fallback: entries-compact style */
 .entries-compact .entry-card {
   padding: 14px 0;
 }
