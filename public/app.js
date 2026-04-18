@@ -398,7 +398,6 @@
 
   function ensureModeControl() {
     var currentMode = getPersistedMode() || "sunny";
-    var modeLabel = document.getElementById("mode-label");
     var modeOrder = ["night", "day", "sunny"];
 
     function stopSummerMedia() {
@@ -413,26 +412,24 @@
 
     function setMode(mode) {
       currentMode = mode;
-      document.body.classList.remove("light", "sunny");
+      // Vercel CSS: use data-mode attribute on <html> instead of body classes
+      document.documentElement.setAttribute("data-mode", mode);
+      
+      // Update dot indicators
       ["night", "day", "sunny"].forEach(function (item) {
         var dot = document.getElementById("dot-" + item);
         if (dot) dot.classList.remove("active");
       });
 
       if (mode === "day") {
-        document.body.classList.add("light");
         document.getElementById("dot-day").classList.add("active");
-        if (modeLabel) modeLabel.textContent = "day";
         stopSummerMedia();
       } else if (mode === "sunny") {
-        document.body.classList.add("light", "sunny");
         document.getElementById("dot-sunny").classList.add("active");
-        if (modeLabel) modeLabel.textContent = "sunny";
         var video = document.getElementById("leaves-overlay");
         if (video) video.play().catch(function () {});
       } else {
         document.getElementById("dot-night").classList.add("active");
-        if (modeLabel) modeLabel.textContent = "night";
         stopSummerMedia();
       }
 

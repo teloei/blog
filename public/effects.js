@@ -24,7 +24,9 @@
     window.addEventListener("resize", resize, { passive: true });
 
     function isDark() {
-      return !document.body.classList.contains("light");
+      // Vercel: night mode = dark particles
+      var mode = document.documentElement.getAttribute("data-mode");
+      return mode === "night";
     }
 
     function targetCount() {
