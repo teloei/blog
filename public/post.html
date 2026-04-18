@@ -32,14 +32,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://blog.teloei35.workers.dev">
   
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono:wght@400;500&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+  <!-- Fonts: Geist (Vercel) -->
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="忒卷 - RSS 订阅" href="https://blog.teloei35.workers.dev/blogApi?action=getRss">
   
   <!-- Styles -->
-  <link rel="stylesheet" href="./style.css?v=2026041502">
+  <link rel="stylesheet" href="./style.css?v=2026041801">
   
   <!-- JSON-LD (will be updated by JS) -->
   <script type="application/ld+json" id="article-json-ld">
@@ -54,7 +54,8 @@
   </script>
 </head>
 <body data-page="post">
-  <script>(function(){var m=localStorage.getItem('xiaogai-display-mode');if(m==='day'){document.body.className='light';}else if(m==='sunny'||!m){document.body.className='light sunny';}})();</script>
+  <!-- Theme initialization -->
+  <script>(function(){var m=localStorage.getItem('xiaogai-display-mode');document.documentElement.setAttribute('data-mode',m||'sunny');})();</script>
   
   <!-- Reading Progress -->
   <div id="reading-progress" class="reading-progress"></div>
@@ -66,61 +67,59 @@
   <div class="sun-glow"></div>
   <div class="light-shaft light-shaft-1"></div>
   <div class="light-shaft light-shaft-2"></div>
-  <div class="light-shaft light-shaft-3"></div>
 
   <!-- Mode Indicator -->
   <div class="mode-indicator">
-    <a class="subtle-link" href="./index.html">返回首页</a>
-    <a class="subtle-link hidden" id="post-edit-link" href="./admin.html">编辑</a>
-    <div class="mode-dot" id="dot-night" title="夜间模式"></div>
-    <div class="mode-dot" id="dot-day" title="日间模式"></div>
-    <div class="mode-dot" id="dot-sunny" title="阳光模式"></div>
+    <a class="mode-link" href="./index.html">← 返回</a>
+    <a class="mode-link hidden" id="post-edit-link" href="./admin.html">编辑</a>
+    <button class="mode-dot" id="dot-night" title="夜间模式" aria-label="夜间模式"></button>
+    <button class="mode-dot active" id="dot-day" title="日间模式" aria-label="日间模式"></button>
+    <button class="mode-dot" id="dot-sunny" title="阳光模式" aria-label="阳光模式"></button>
   </div>
 
-  <main class="page page-narrow">
-    <section class="hero hero-compact">
-      <div class="section-head">
-      </div>
-    </section>
-
+  <main class="page">
     <!-- Post Article -->
     <article id="post-view" class="post-shell hidden">
+      
+      <!-- Post Header -->
       <header class="post-header">
-        <div class="section-title">Article</div>
+        <div class="post-tags" id="post-tags"></div>
         <h1 id="post-title" class="post-title"></h1>
-        <div id="post-meta" class="post-meta">
+        <div class="post-meta" id="post-meta">
           <span class="meta-item" id="post-date"></span>
+          <span class="meta-divider">·</span>
           <span class="meta-item" id="post-reading-time"></span>
         </div>
-        <div id="post-tags" class="post-tags"></div>
       </header>
+      
+      <!-- Post Content -->
       <div id="post-content" class="post-content"></div>
       
-      <!-- Share Bar -->
+      <!-- Share Bar (Vercel Pill Buttons) -->
       <div class="post-share-bar">
-        <span class="share-label">分享</span>
-        <button class="share-button wechat-btn" id="share-wechat-btn" type="button" title="分享到微信">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.362.303c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89l-.406-.032z"/></svg>
+        <span class="share-label">Share</span>
+        <button class="share-button" id="share-wechat-btn" type="button" title="微信">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.362.303c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89l-.406-.032z"/></svg>
           <span>微信</span>
         </button>
         <button class="share-button" id="copy-link-btn" type="button" title="复制链接">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          <span>复制</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <span>复制链接</span>
         </button>
-        <button class="share-button" id="share-twitter-btn" type="button" title="分享到 X">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          <span>X</span>
+        <button class="share-button" id="share-twitter-btn" type="button" title="X">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          <span>X / Twitter</span>
         </button>
-        <button class="share-button weibo-btn" id="share-weibo-btn" type="button" title="分享到微博">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.043 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443zm7.63-9.065c-.271-.086-.463-.145-.318-.521.306-.781.338-1.453.002-1.932-.633-.901-2.363-.852-4.35-.024 0 0-.623.272-.463-.221.304-.973.258-1.787-.214-2.257-.944-.94-3.455.086-5.606 2.294-1.624 1.668-2.576 3.436-2.576 4.926 0 2.854 3.664 4.598 7.246 4.598 4.696 0 7.82-2.729 7.82-4.898 0-1.313-1.107-2.058-1.541-1.965zm3.502-5.836c-1.6-1.887-3.96-2.61-5.26-1.612-1.3.998-.97 3.252.63 5.139 1.6 1.887 3.96 2.61 5.26 1.612 1.3-.998.97-3.252-.63-5.139zm-4.59 2.539c-.47-.553-.47-1.263-.008-1.586.463-.322 1.183-.092 1.653.46.47.553.47 1.263.008 1.586-.463.323-1.183.092-1.653-.46z"/></svg>
+        <button class="share-button" id="share-weibo-btn" type="button" title="微博">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.043 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443zm7.63-9.065c-.271-.086-.463-.145-.318-.521.306-.781.338-1.453.002-1.932-.633-.901-2.363-.852-4.35-.024 0 0-.623.272-.463-.221.304-.973.258-1.787-.214-2.257-.944-.94-3.455.086-5.606 2.294-1.624 1.668-2.576 3.436-2.576 4.926 0 2.854 3.664 4.598 7.246 4.598 4.696 0 7.82-2.729 7.82-4.898 0-1.313-1.107-2.058-1.541-1.965zm3.502-5.836c-1.6-1.887-3.96-2.61-5.26-1.612-1.3.998-.97 3.252.63 5.139 1.6 1.887 3.96 2.61 5.26 1.612 1.3-.998.97-3.252-.63-5.139zm-4.59 2.539c-.47-.553-.47-1.263-.008-1.586.463-.322 1.183-.092 1.653.46.47.553.47 1.263.008 1.586-.463.323-1.183.092-1.653-.46z"/></svg>
           <span>微博</span>
         </button>
-        <button class="share-button xiaohongshu-btn" id="share-xhs-btn" type="button" title="分享到小红书">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 14.36c-.36.78-1.56 1.52-2.64 1.8-.36.1-.72.14-1.08.14-1.12 0-2.2-.44-3-1.2-.4-.36-.68-.84-.88-1.32-.08-.16-.12-.32-.16-.48 1.68-.56 3.32-1.44 3.32-1.44s3.96 2.56 4.44 2.48z"/></svg>
+        <button class="share-button" id="share-xhs-btn" type="button" title="小红书">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 14.36c-.36.78-1.56 1.52-2.64 1.8-.36.1-.72.14-1.08.14-1.12 0-2.2-.44-3-1.2-.4-.36-.68-.84-.88-1.32-.08-.16-.12-.32-.16-.48 1.68-.56 3.32-1.44 3.32-1.44s3.96 2.56 4.44 2.48z"/></svg>
           <span>小红书</span>
         </button>
-        <button class="share-button zhihu-btn" id="share-zhihu-btn" type="button" title="分享到知乎">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.344 1.502c-.359 0-.688.134-.932.378L5.89 7.393c-.215.213-.355.467-.355.762 0 .295.14.549.355.762l2.44 2.441-.643 2.121-2.73-2.729c-.142-.143-.309-.213-.475-.213a.74.74 0 0 0-.475.213l-2.44 2.44a.74.74 0 0 0 0 1.063l5.523 5.523a.74.74 0 0 0 1.063 0l2.44-2.44c.213-.213.467-.355.762-.355.295 0 .549.142.762.355l.643 2.12-2.121.643a.74.74 0 0 0-.355.475c0 .166.07.333.213.475l2.2 2.2a.74.74 0 0 0 1.063 0l2.44-2.44c.213-.213.355-.467.355-.762 0-.295-.142-.549-.355-.762l-5.523-5.523c.213-.213.355-.467.355-.762 0-.295-.142-.549-.355-.762l2.44-2.44c.244-.244.378-.573.378-.932 0-.359-.134-.688-.378-.932l-2.44-2.44a.74.74 0 0 0-1.063 0zm1.067 1.067L19.9 9.06l-1.416 1.415 1.415 1.415-.708.708-1.415-1.415-1.415 1.415.708.708 1.415-1.415 1.415 1.415-.708.708-1.415-1.415-1.415 1.415.708.708 1.415-1.415 1.415 1.415-.708.708-1.415-1.415-1.415 1.415 1.066 1.066 1.415-1.415 1.415 1.415-1.415 1.415 1.066 1.066z"/></svg>
+        <button class="share-button" id="share-zhihu-btn" type="button" title="知乎">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.344 1.502c-.359 0-.688.134-.932.378L5.89 7.393c-.215.213-.355.467-.355.762 0 .295.14.549.355.762l2.44 2.441-.643 2.121-2.73-2.729c-.142-.143-.309-.213-.475-.213a.74.74 0 0 0-.475.213l-2.44 2.44a.74.74 0 0 0 0 1.063l5.523 5.523a.74.74 0 0 0 1.063 0l2.44-2.44c.213-.213.467-.355.762-.355.295 0 .549.142.762.355l.643 2.12-2.121.643a.74.74 0 0 0-.355.475c0 .166.07.333.213.475l2.2 2.2a.74.74 0 0 0 1.063 0l2.44-2.44c.213-.213.355-.467.355-.762 0-.295-.142-.549-.355-.762l-5.523-5.523c.213-.213.355-.467.355-.762 0-.295-.142-.549-.355-.762l2.44-2.44c.244-.244.378-.573.378-.932 0-.359-.134-.688-.378-.932l-2.44-2.44a.74.74 0 0 0-1.063 0z"/></svg>
           <span>知乎</span>
         </button>
       </div>
@@ -130,19 +129,21 @@
 
     <!-- Related Posts -->
     <section id="related-posts-section" class="section related-section hidden">
-      <div class="section-title">相关文章</div>
-      <div id="related-posts-list" class="entries entries-compact"></div>
+      <div class="section-head">
+        <div class="section-title">Related</div>
+      </div>
+      <div id="related-posts-list" class="related-grid"></div>
     </section>
 
-    <div class="divider"></div>
-
     <!-- Comments Section -->
-    <section class="section">
-      <div class="section-title">留言</div>
+    <section id="comments-section" class="section">
+      <div class="section-head">
+        <div class="section-title">Comments <span id="comment-count" style="font-weight:400;opacity:0.5"></span></div>
+      </div>
       <div id="comments-list" class="comments-list"></div>
       <div id="comments-empty" class="empty-state hidden">还没有公开留言。你可以做第一个。</div>
 
-      <form id="comment-form" class="comment-form panel panel-soft">
+      <form id="comment-form" class="comment-form">
         <div class="field-row">
           <label class="field-label" for="comment-author">名字</label>
           <input id="comment-author" name="author" maxlength="24" placeholder="怎么称呼你">
@@ -158,7 +159,7 @@
   </main>
 
   <!-- Back to Top -->
-  <button id="back-to-top" class="back-to-top" type="button" title="回到顶部">
+  <button id="back-to-top" class="back-to-top" type="button" title="回到顶部" aria-label="回到顶部">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
 
@@ -169,6 +170,6 @@
 
   <!-- Scripts -->
   <script src="./cloudbase-config.js"></script>
-  <script src="./app.js?v=2026041502"></script>
+  <script src="./app.js?v=2026041801"></script>
 </body>
 </html>

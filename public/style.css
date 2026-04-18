@@ -772,6 +772,13 @@ body {
   color: var(--text-faint);
 }
 
+.meta-divider {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.5;
+}
+
 .post-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 
 .post-tag {

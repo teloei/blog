@@ -1038,11 +1038,12 @@
     // Update SEO meta tags
     updateSeoMetaTags(data.post);
     
-    // Calculate and display reading time
+    // Calculate and display reading time (Vercel style: mono meta)
     var readingTime = calculateReadingTime(data.post.content || "");
     var postMeta = document.getElementById("post-meta");
     postMeta.innerHTML = [
       '<span class="meta-item">' + escapeHtml(formatDate(data.post.publishedAt)) + "</span>",
+      '<span class="meta-divider">·</span>',
       '<span class="meta-item">' + readingTime + " 分钟阅读</span>"
     ].join("");
     
@@ -1151,9 +1152,13 @@
     }
 
     function renderComments(items) {
+      var count = (items || []).length;
+      var countEl = document.getElementById("comment-count");
+      if (countEl) countEl.textContent = "(" + count + ")";
+      
       commentsList.innerHTML = renderCommentNodes(buildCommentTree(items || []), 0);
 
-      commentsEmpty.classList.toggle("hidden", Boolean((items || []).length));
+      commentsEmpty.classList.toggle("hidden", Boolean(count));
 
       commentsList.querySelectorAll("[data-reply-toggle]").forEach(function (button) {
         button.addEventListener("click", function () {
@@ -2080,13 +2085,20 @@
       
       section.classList.remove("hidden");
       list.innerHTML = related.map(function(post) {
+        var tagHtml = "";
+        if (post.tags && post.tags.length > 0) {
+          var tagList = [];
+          try { tagList = JSON.parse(post.tags); } catch(e) { tagList = []; }
+          if (tagList.length > 0) {
+            tagHtml = '<div class="related-card-tag">#' + escapeHtml(tagList[0]) + '</div>';
+          }
+        }
         return [
-          '<article class="entry-card entry-card-compact">',
-          '  <a class="entry-link" href="./post.html?id=' + escapeHtml(post.id) + '">',
-          '    <div class="entry-title">' + escapeHtml(post.title) + '</div>',
-          '    <div class="entry-meta">' + escapeHtml(formatDate(post.publishedAt)) + '</div>',
-          '  </a>',
-          '</article>'
+          '<a class="related-card" href="./post.html?id=' + escapeHtml(post.id) + '">',
+          '  ' + tagHtml,
+          '  <div class="related-card-title">' + escapeHtml(post.title) + '</div>',
+          '  <div class="related-card-date">' + escapeHtml(formatDate(post.publishedAt)) + '</div>',
+          '</a>'
         ].join("");
       }).join("");
     } catch (e) {
