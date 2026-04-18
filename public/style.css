@@ -631,31 +631,36 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CONNECT SECTION
+   CONNECT SECTION — Vercel Horizontal Grid
    ═══════════════════════════════════════════════════════════════ */
 .connect-items {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
 }
 
 .connect-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: var(--radius-card);
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
   background: var(--bg);
   box-shadow: var(--shadow-border);
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   text-decoration: none;
-  transition: box-shadow 200ms, color 200ms, transform 200ms var(--ease);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition: background 200ms, color 200ms, transform 200ms var(--ease), box-shadow 200ms;
 }
 
 .connect-item:hover {
+  background: var(--vercel-black);
+  color: #fff;
   box-shadow: var(--shadow-lift);
-  color: var(--text);
   transform: translateY(-1px);
 }
 
@@ -663,42 +668,23 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: var(--surface);
+  width: 18px; height: 18px;
   flex-shrink: 0;
-  transition: background 200ms;
+  transition: fill 200ms;
 }
 
-.platform-icon svg { width: 14px; height: 14px; fill: var(--text-faint); }
-
-.connect-item-info { flex: 1; min-width: 0; }
+.platform-icon svg { width: 14px; height: 14px; fill: currentColor; }
 
 .connect-item-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--text);
+  letter-spacing: -0.01em;
   display: block;
 }
 
-.connect-item-desc {
-  font-size: 12px;
-  color: var(--text-faint);
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 1px;
-}
+.connect-item-desc { display: none; }
 
-.connect-item-arrow {
-  color: var(--text-faint);
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 200ms, transform 200ms;
-}
-
-.connect-item:hover .connect-item-arrow { opacity: 1; transform: translateX(0); color: var(--accent); }
+.connect-item-arrow { display: none; }
 
 /* ═══════════════════════════════════════════════════════════════
    FOOTER
