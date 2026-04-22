@@ -1,0 +1,69 @@
+---
+export const prerender = true;
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import BlogCard from '../../components/BlogCard.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const allTags = [...new Set(allPosts.flatMap(post => post.data.tags))].sort();
+
+// Tag filter
+const { tag } = Astro.params;
+const filteredPosts = tag
+  ? allPosts.filter(post => post.data.tags.includes(tag!))
+  : allPosts;
+---
+
+<BaseLayout title={tag ? `${tag} — 博客` : '博客 — Teloei\'s Blog'}>
+  <Header slot="header" />
+  <div class="max-w-page mx-auto px-5 py-10 md:py-16">
+    <!-- Page Header -->
+    <div class="mb-10">
+      <h1 class="text-3xl md:text-h1 font-serif text-charcoal dark:text-warm-50 mb-4">
+        {tag ? `标签：${tag}` : '所有文章'}
+      </h1>
+      <p class="text-warm-400">
+        共 {filteredPosts.length} 篇文章
+        {tag && <a href="/blog" class="ml-2 text-terra hover:underline">← 清除筛选</a>}
+      </p>
+    </div>
+
+    <!-- Tag Filter -->
+    {!tag && allTags.length > 0 && (
+      <div class="flex flex-wrap gap-2 mb-10">
+        <a href="/blog" class="text-sm px-3 py-1.5 rounded-full bg-terra text-white font-medium transition-colors">全部</a>
+        {allTags.map(t => (
+          <a href={`/blog?tag=${t}`} class="text-sm px-3 py-1.5 rounded-full bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-400 hover:bg-terra/10 hover:text-terra transition-colors">
+            {t}
+          </a>
+        ))}
+      </div>
+    )}
+
+    <!-- Posts Grid -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredPosts.map(post => (
+        <BlogCard
+          title={post.data.title}
+          excerpt={post.data.excerpt}
+          date={post.data.date}
+          tags={post.data.tags}
+          slug={post.slug}
+          image={post.data.image}
+        />
+      ))}
+    </div>
+
+    {filteredPosts.length === 0 && (
+      <div class="text-center py-20">
+        <p class="text-warm-400 text-lg">暂无文章</p>
+        <a href="/blog" class="inline-block mt-4 text-sm text-terra hover:underline">查看所有文章 →</a>
+      </div>
+    )}
+  </div>
+  <Footer slot="footer" />
+</BaseLayout>

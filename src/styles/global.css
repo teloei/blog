@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-terra: #D97757;
+  --color-terra-dark: #CC6B4D;
+  --color-terra-light: #E8926E;
+
+  --color-cream: #FAFAF9;
+  --color-charcoal: #1C1917;
+
+  --color-warm-50: #FAFAF9;
+  --color-warm-100: #F5F5F4;
+  --color-warm-200: #E7E5E4;
+  --color-warm-300: #D6D3D1;
+  --color-warm-400: #A8A29E;
+  --color-warm-500: #78716C;
+  --color-warm-600: #57534E;
+  --color-warm-700: #44403C;
+  --color-warm-800: #292524;
+  --color-warm-900: #1C1917;
+
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  --shadow-soft-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-soft-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-soft-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+  --radius-card: 12px;
+  --radius-btn: 8px;
+  --radius-input: 8px;
+}
+
+html { font-family: var(--font-sans); }
+body { @apply bg-cream text-charcoal antialiased; }
+.dark body { @apply bg-warm-900 text-warm-50; }
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-serif); }
+::selection { background-color: color-mix(in srgb, var(--color-terra) 20%, transparent); }
+
+/* Prose */
+.prose h1 { @apply text-3xl md:text-4xl font-bold mb-6 mt-12 first:mt-0; }
+.prose h2 { @apply text-2xl md:text-[1.75rem] font-semibold mb-4 mt-10; }
+.prose h3 { @apply text-xl md:text-[1.375rem] font-semibold mb-3 mt-8; }
+.prose h4 { @apply text-lg font-semibold mb-2 mt-6; }
+.prose p { @apply mb-5 leading-relaxed text-warm-600; }
+.prose a { @apply text-terra hover:text-terra-dark transition-colors underline decoration-terra/30 hover:decoration-terra/60 underline-offset-2; }
+.prose ul { @apply mb-5 pl-6 list-disc; }
+.prose ol { @apply mb-5 pl-6 list-decimal; }
+.prose li { @apply mb-2 leading-relaxed text-warm-600; }
+.prose blockquote { @apply border-l-[3px] border-terra/40 pl-5 my-6 italic text-warm-500; }
+.prose code:not(pre code) { @apply bg-warm-100 dark:bg-warm-700 text-terra px-1.5 py-0.5 rounded text-sm font-mono; }
+.prose pre { @apply rounded-card p-5 my-6 overflow-x-auto; }
+.prose pre code { @apply bg-transparent text-sm p-0; }
+.prose img { @apply rounded-card my-6 max-w-full; }
+.prose hr { @apply border-warm-200 dark:border-warm-700 my-8; }
+.prose table { @apply w-full my-6 text-sm; }
+.prose th { @apply border-b-2 border-warm-200 dark:border-warm-700 py-2 text-left font-semibold; }
+.prose td { @apply border-b border-warm-100 dark:border-warm-800 py-2; }
+.dark .prose p, .dark .prose li { @apply text-warm-400; }
+.dark .prose blockquote { @apply text-warm-500; }
+.dark .prose code:not(pre code) { @apply bg-warm-700; }
+
+.max-w-article { max-width: 720px; }
+.max-w-page { max-width: 1200px; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

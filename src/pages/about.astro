@@ -1,0 +1,214 @@
+---
+export const prerender = true;
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<BaseLayout title="关于我 — 李勇">
+  <Header slot="header" />
+  
+  <div class="max-w-6xl mx-auto px-6 py-12 md:py-24">
+    <!-- ══════════════════════════════════════════════
+         TOP SECTION: BIO & IMAGE
+         ══════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-24">
+      <div class="lg:col-span-7">
+        <div class="inline-block px-3 py-1 rounded-full bg-terra/10 text-terra text-xs font-bold tracking-widest uppercase mb-6 animate-fade-in">
+          About Me
+        </div>
+        <h1 class="text-4xl md:text-5xl font-serif text-charcoal dark:text-warm-50 mb-8 leading-tight">
+          关于我 <span class="inline-block animate-wave">👋</span>
+          <br/>
+          <span class="text-terra text-2xl md:text-3xl mt-2 block font-sans font-medium">跨界设计师 / AI 创意探索者</span>
+        </h1>
+        
+        <div class="prose prose-neutral dark:prose-invert max-w-none text-charcoal/80 dark:text-warm-200 space-y-4 mb-10">
+          <p>
+            你好，我是 <strong>李勇 (Li Yong)</strong>。一名深耕创意领域 15 年以上的设计师。
+          </p>
+          <p>
+            我的职业生涯是一场跨度极大的“奇幻旅程”：从研究<strong>化学工艺</strong>的严谨逻辑，到投身 <strong>IT 互联网</strong>的数字化浪潮，再到如今全面拥抱 <strong>AI 创意应用</strong>。这种跨学科的背景让我学会了如何用逻辑去解构美学，用技术去驱动创意。
+          </p>
+          <p>
+            我相信<strong>“设计不只是视觉，更是解决问题的逻辑”</strong>。在这个 AI 爆发的时代，我致力于探索人工智能如何重塑创意工作流，为设计赋予新的生命力。
+          </p>
+        </div>
+
+        <!-- CONTACT GRID -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-10">
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-warm-50 dark:bg-warm-900/30 border border-warm-100 dark:border-warm-800">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-warm-800 shadow-sm text-terra">📍</span>
+            <span class="text-charcoal/70 dark:text-warm-300">中国 · 长治</span>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-warm-50 dark:bg-warm-900/30 border border-warm-100 dark:border-warm-800">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-warm-800 shadow-sm text-terra">✉️</span>
+            <a href="mailto:teloei35@gmail.com" class="text-charcoal/70 dark:text-warm-300 hover:text-terra transition-colors">teloei35@gmail.com</a>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-warm-50 dark:bg-warm-900/30 border border-warm-100 dark:border-warm-800">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-warm-800 shadow-sm text-terra">🔗</span>
+            <a href="https://github.com/teloei" target="_blank" class="text-charcoal/70 dark:text-warm-300 hover:text-terra transition-colors">github.com/teloei</a>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-warm-50 dark:bg-warm-900/30 border border-warm-100 dark:border-warm-800">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-warm-800 shadow-sm text-terra">📅</span>
+            <span class="text-charcoal/70 dark:text-warm-300">设计经验 15+ 年</span>
+          </div>
+        </div>
+
+        <a href="mailto:teloei35@gmail.com" class="inline-flex items-center gap-3 px-8 py-4 bg-terra text-white rounded-full font-bold shadow-lg shadow-terra/20 hover:bg-terra-dark hover:-translate-y-1 transition-all">
+          📩 联系我
+        </a>
+      </div>
+
+      <div class="lg:col-span-5 relative group">
+        <div class="absolute -inset-4 bg-gradient-to-tr from-terra/20 to-orange-500/20 rounded-[2rem] blur-2xl opacity-50 group-hover:opacity-80 transition-opacity"></div>
+        <div class="relative aspect-[4/5] rounded-[2rem] overflow-hidden border border-warm-200 dark:border-warm-700 shadow-2xl">
+          <!-- WORKSPACE IMAGE PLACEHOLDER -->
+          <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop" alt="Workspace" class="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" />
+          <div class="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent"></div>
+          <div class="absolute bottom-8 left-8 right-8">
+            <p class="text-white/90 text-sm italic font-serif">"Creativity is intelligence having fun."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         STATS CARDS
+         ══════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
+      <div class="p-8 bg-white dark:bg-warm-800/50 rounded-2xl border border-warm-100 dark:border-warm-800 shadow-soft hover:border-terra/30 transition-all group">
+        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-2xl">🎨</div>
+        <div class="text-3xl font-serif text-charcoal dark:text-warm-50 mb-1">15+ 年</div>
+        <div class="text-sm text-warm-400 uppercase tracking-wider font-bold">设计经验</div>
+      </div>
+      <div class="p-8 bg-white dark:bg-warm-800/50 rounded-2xl border border-warm-100 dark:border-warm-800 shadow-soft hover:border-terra/30 transition-all group">
+        <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/20 text-green-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-2xl">✍️</div>
+        <div class="text-3xl font-serif text-charcoal dark:text-warm-50 mb-1">100+ 篇</div>
+        <div class="text-sm text-warm-400 uppercase tracking-wider font-bold">思考沉淀</div>
+      </div>
+      <div class="p-8 bg-white dark:bg-warm-800/50 rounded-2xl border border-warm-100 dark:border-warm-800 shadow-soft hover:border-terra/30 transition-all group">
+        <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-2xl">🤖</div>
+        <div class="text-3xl font-serif text-charcoal dark:text-warm-50 mb-1">AI 原生</div>
+        <div class="text-sm text-warm-400 uppercase tracking-wider font-bold">工作流重塑</div>
+      </div>
+      <div class="p-8 bg-white dark:bg-warm-800/50 rounded-2xl border border-warm-100 dark:border-warm-800 shadow-soft hover:border-terra/30 transition-all group">
+        <div class="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-2xl">🚀</div>
+        <div class="text-3xl font-serif text-charcoal dark:text-warm-50 mb-1">持续进化</div>
+        <div class="text-sm text-warm-400 uppercase tracking-wider font-bold">永不止步</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         TECH STACK: DESIGN & TECH
+         ══════════════════════════════════════════════ -->
+    <section class="mb-24 p-10 md:p-16 bg-warm-50 dark:bg-warm-900/20 rounded-[3rem] border border-warm-100 dark:border-warm-800">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-serif text-charcoal dark:text-warm-50 mb-4">技术栈与工具</h2>
+        <p class="text-warm-400">我常用的一站式设计与开发利器</p>
+      </div>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+        {[
+          { name: 'Adobe CC', icon: '🎨', color: 'bg-red-50 dark:bg-red-900/20' },
+          { name: 'Blender', icon: '🧊', color: 'bg-orange-50 dark:bg-orange-900/20' },
+          { name: 'Cinema 4D', icon: '✨', color: 'bg-blue-50 dark:bg-blue-900/20' },
+          { name: 'Figma', icon: '🖋️', color: 'bg-purple-50 dark:bg-purple-900/20' },
+          { name: 'Midjourney', icon: '🌌', color: 'bg-charcoal/5 dark:bg-white/10' },
+          { name: 'Stable Diffusion', icon: '🧠', color: 'bg-green-50 dark:bg-green-900/20' },
+          { name: 'Astro', icon: '🚀', color: 'bg-orange-50 dark:bg-orange-900/20' },
+          { name: 'Tailwind CSS', icon: '🌊', color: 'bg-cyan-50 dark:bg-cyan-900/20' },
+          { name: 'JavaScript', icon: '📜', color: 'bg-yellow-50 dark:bg-yellow-900/20' },
+          { name: 'Python', icon: '🐍', color: 'bg-blue-50 dark:bg-blue-900/20' },
+          { name: 'React', icon: '⚛️', color: 'bg-blue-50 dark:bg-blue-900/20' },
+          { name: '更多...', icon: '➕', color: 'bg-warm-100 dark:bg-warm-800' }
+        ].map(tech => (
+          <div class="flex flex-col items-center gap-3 group">
+            <div class={`w-16 h-16 rounded-2xl ${tech.color} flex items-center justify-center text-3xl shadow-sm group-hover:-translate-y-2 group-hover:shadow-md transition-all duration-300`}>
+              {tech.icon}
+            </div>
+            <span class="text-xs font-bold text-charcoal/60 dark:text-warm-400 group-hover:text-terra transition-colors">{tech.name}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════
+         MY JOURNEY: TIMELINE
+         ══════════════════════════════════════════════ -->
+    <section class="max-w-3xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-serif text-charcoal dark:text-warm-50 mb-4">我的旅程</h2>
+        <p class="text-warm-400">不断跨界，持续成长</p>
+      </div>
+
+      <div class="space-y-12 relative before:absolute before:left-[1.25rem] before:top-2 before:bottom-2 before:w-0.5 before:bg-warm-100 dark:before:bg-warm-800">
+        <!-- ENTRY 1 -->
+        <div class="relative pl-16 group">
+          <div class="absolute left-0 top-1 w-10 h-10 rounded-full bg-white dark:bg-warm-800 border-2 border-warm-100 dark:border-warm-700 flex items-center justify-center z-10 group-hover:border-terra transition-colors">
+            <div class="w-3 h-3 rounded-full bg-warm-200 dark:bg-warm-700 group-hover:bg-terra transition-colors"></div>
+          </div>
+          <div class="p-8 bg-white dark:bg-warm-800/50 rounded-2xl border border-warm-100 dark:border-warm-800 shadow-soft group-hover:shadow-md transition-all">
+            <time class="text-xs font-bold text-terra uppercase tracking-widest mb-2 block">2008 - 2014</time>
+            <h3 class="text-xl font-serif text-charcoal dark:text-warm-50 mb-3">化学工艺 · 逻辑的起点</h3>
+            <p class="text-charcoal/70 dark:text-warm-300 leading-relaxed">
+              这段经历塑造了我对底层逻辑和系统化思维的理解。严谨的实验与复杂的流程分析，为我后来的职业转型埋下了理性的种子。
+            </p>
+          </div>
+        </div>
+
+        <!-- ENTRY 2 -->
+        <div class="relative pl-16 group">
+          <div class="absolute left-0 top-1 w-10 h-10 rounded-full bg-white dark:bg-warm-800 border-2 border-warm-100 dark:border-warm-700 flex items-center justify-center z-10 group-hover:border-terra transition-colors">
+            <div class="w-3 h-3 rounded-full bg-warm-200 dark:bg-warm-700 group-hover:bg-terra transition-colors"></div>
+          </div>
+          <div class="p-8 bg-white dark:bg-warm-800/50 rounded-2xl border border-warm-100 dark:border-warm-800 shadow-soft group-hover:shadow-md transition-all">
+            <time class="text-xs font-bold text-terra uppercase tracking-widest mb-2 block">2014 - 2024</time>
+            <h3 class="text-xl font-serif text-charcoal dark:text-warm-50 mb-3">IT 技术 · 数字化深耕</h3>
+            <p class="text-charcoal/70 dark:text-warm-300 leading-relaxed">
+              跨入互联网领域，十年间我深度参与了各类数字化产品的设计与技术实现。从 UI/UX 到前端架构，我见证了技术如何改变人类的交互方式。
+            </p>
+          </div>
+        </div>
+
+        <!-- ENTRY 3 -->
+        <div class="relative pl-16 group">
+          <div class="absolute left-0 top-1 w-10 h-10 rounded-full bg-terra border-2 border-terra flex items-center justify-center z-10 shadow-lg shadow-terra/30">
+            <div class="w-3 h-3 rounded-full bg-white animate-pulse"></div>
+          </div>
+          <div class="p-8 bg-white dark:bg-warm-800/50 rounded-2xl border border-terra/30 dark:border-terra/20 shadow-soft group-hover:shadow-md transition-all">
+            <time class="text-xs font-bold text-terra uppercase tracking-widest mb-2 block">2024 - 至今</time>
+            <h3 class="text-xl font-serif text-charcoal dark:text-warm-50 mb-3">AI 应用 · 创意的未来</h3>
+            <p class="text-charcoal/70 dark:text-warm-300 leading-relaxed">
+              目前正全力探索 AI 与创意的融合。利用生成式 AI 技术重构设计工作流，开发智能化应用，在这个充满可能性的新纪元，开启我的“第三次进化”。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <Footer slot="footer" />
+</BaseLayout>
+
+<style>
+  @keyframes wave {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(-10deg); }
+    40% { transform: rotate(12deg); }
+    60% { transform: rotate(-10deg); }
+    80% { transform: rotate(8deg); }
+  }
+  .animate-wave {
+    animation: wave 2.5s infinite;
+    transform-origin: 70% 70%;
+    display: inline-block;
+  }
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.8s ease-out forwards;
+  }
+</style>

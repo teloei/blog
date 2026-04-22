@@ -1,0 +1,540 @@
+---
+export const prerender = true;
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import BlogCard from '../components/BlogCard.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const featuredPosts = allPosts.slice(0, 3);
+const recentPosts = allPosts.slice(3, 8);
+---
+
+<BaseLayout title="忒卷 — 记录技术与思考">
+  <Header slot="header" />
+
+  <!-- ══════════════════════════════════════════════
+       SUNLIT HERO — full-viewport dappled light
+       ══════════════════════════════════════════════ -->
+  <section class="sunlit-hero" id="sunlit-hero">
+    <!-- ── dappled light layers ── -->
+    <div id="dappled-light">
+      <div id="glow"></div>
+      <div id="glow-bounce"></div>
+      <div class="perspective">
+        <div id="leaves">
+          <svg class="sr-only" aria-hidden="true">
+            <defs>
+              <filter id="wind" x="-20%" y="-20%" width="140%" height="140%">
+                <feTurbulence type="fractalNoise" numOctaves="2" seed="1">
+                  <animate attributeName="baseFrequency" dur="16s" keyTimes="0;0.33;0.66;1"
+                    values="0.005 0.003;0.01 0.009;0.008 0.004;0.005 0.003" repeatCount="indefinite" />
+                </feTurbulence>
+                <feDisplacementMap in="SourceGraphic">
+                  <animate attributeName="scale" dur="20s" keyTimes="0;0.25;0.5;0.75;1" values="45;55;75;55;45"
+                    repeatCount="indefinite" />
+                </feDisplacementMap>
+              </filter>
+            </defs>
+          </svg>
+        </div>
+        <div id="blinds">
+          <div class="shutters">
+            <div class="shutter"></div><div class="shutter"></div><div class="shutter"></div>
+            <div class="shutter"></div><div class="shutter"></div><div class="shutter"></div>
+            <div class="shutter"></div><div class="shutter"></div><div class="shutter"></div>
+            <div class="shutter"></div><div class="shutter"></div><div class="shutter"></div>
+            <div class="shutter"></div><div class="shutter"></div><div class="shutter"></div>
+            <div class="shutter"></div><div class="shutter"></div><div class="shutter"></div>
+            <div class="shutter"></div><div class="shutter"></div><div class="shutter"></div>
+            <div class="shutter"></div><div class="shutter"></div>
+          </div>
+          <div class="vertical">
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+        </div>
+      </div>
+      <div id="progressive-blur">
+        <div></div><div></div><div></div><div></div>
+      </div>
+    </div>
+
+    <!-- ── hero content ── -->
+    <div class="hero-content">
+      <span class="hero-badge">Blog</span>
+      <h1 class="hero-title">忒卷</h1>
+      <p class="hero-desc">
+        在代码与文字之间寻找平衡，<br class="hidden sm:inline" />
+        用写作沉淀那些稍纵即逝的灵感。
+      </p>
+      <div class="hero-actions">
+        <a href="/blog" class="hero-btn-primary">浏览文章</a>
+        <a href="/about" class="hero-btn-ghost">关于我</a>
+      </div>
+      <p class="hero-hint">按 <kbd>Space</kbd> 切换日光</p>
+    </div>
+
+    <!-- ── scroll indicator ── -->
+    <div class="scroll-hint" id="scroll-hint">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       FEATURED POSTS
+       ══════════════════════════════════════════════ -->
+  {featuredPosts.length > 0 && (
+    <section class="max-w-page mx-auto px-6 md:px-8 pt-20 pb-16">
+      <div class="flex items-end justify-between mb-10">
+        <div>
+          <span class="text-xs font-medium tracking-widest uppercase text-terra/70 mb-2 block">Featured</span>
+          <h2 class="text-h2 font-serif text-charcoal dark:text-warm-50">精选文章</h2>
+        </div>
+        <a href="/blog" class="text-sm font-medium text-terra hover:text-terra-dark transition-colors hidden sm:block">
+          全部文章 →
+        </a>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        {featuredPosts.map(post => (
+          <BlogCard
+            title={post.data.title}
+            excerpt={post.data.excerpt}
+            date={post.data.date}
+            tags={post.data.tags}
+            slug={post.slug}
+            image={post.data.image}
+          />
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- ══════════════════════════════════════════════
+       RECENT POSTS
+       ══════════════════════════════════════════════ -->
+  {recentPosts.length > 0 && (
+    <section class="max-w-page mx-auto px-6 md:px-8 pb-20 md:pb-28">
+      <div class="flex items-end justify-between mb-10">
+        <div>
+          <span class="text-xs font-medium tracking-widest uppercase text-terra/70 mb-2 block">Recent</span>
+          <h2 class="text-h2 font-serif text-charcoal dark:text-warm-50">最新文章</h2>
+        </div>
+        <a href="/blog" class="text-sm font-medium text-terra hover:text-terra-dark transition-colors">
+          查看全部 →
+        </a>
+      </div>
+      <div class="space-y-3">
+        {recentPosts.map(post => (
+          <a href={`/blog/${post.slug}`} class="group flex items-start gap-5 p-5 bg-white dark:bg-warm-800 rounded-card border border-warm-200 dark:border-warm-700 hover:shadow-soft-md hover:border-terra/20 dark:hover:border-terra/30 transition-all duration-200">
+            <time class="shrink-0 text-sm text-warm-400 pt-0.5 w-20 font-mono tabular-nums">
+              {post.data.date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }).replace('/', '.')}
+            </time>
+            <div class="min-w-0 flex-1">
+              <h3 class="font-serif text-base text-charcoal dark:text-warm-50 group-hover:text-terra transition-colors truncate">
+                {post.data.title}
+              </h3>
+              <p class="text-sm text-warm-400 mt-1 line-clamp-1">{post.data.excerpt}</p>
+            </div>
+            {post.data.tags.length > 0 && (
+              <span class="shrink-0 hidden sm:block text-xs px-2.5 py-1 rounded-full bg-terra/8 text-terra/80 border border-terra/10">
+                {post.data.tags[0]}
+              </span>
+            )}
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <Footer slot="footer" />
+</BaseLayout>
+
+<style>
+  /* ════════════════════════════════════════
+     SUNLIT HERO
+     ════════════════════════════════════════ */
+  .sunlit-hero {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    /* sunlit palette */
+    --sl-day: #fffdfa;
+    --sl-night: #0f131c;
+    --sl-dawn: #16132b;
+    --sl-morning: #9fb3bf;
+    --sl-evening: #fccc83;
+    --sl-dusk: #db7a2a;
+    --sl-shadow: #1a1917;
+    --sl-bounce: #f5d7a6;
+    --sl-shadow-dark: #030307;
+    --sl-bounce-dark: #1b293f;
+    --ease: cubic-bezier(0.455, 0.190, 0.000, 0.985);
+
+    background-color: var(--sl-day);
+    transition: background-color 1s var(--ease);
+  }
+
+  :global(.dark) .sunlit-hero {
+    background-color: var(--sl-night);
+  }
+
+  /* ── dappled light ── */
+  #dappled-light {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+  }
+
+  #glow {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(309deg, var(--sl-bounce), var(--sl-bounce) 20%, transparent);
+    transition: background 1s var(--ease);
+    opacity: 0.5;
+  }
+  :global(.dark) #glow {
+    --sl-bounce: var(--sl-bounce-dark);
+  }
+
+  #glow-bounce {
+    position: absolute;
+    inset: 0;
+    bottom: 0;
+    background: linear-gradient(355deg, var(--sl-bounce) 0%, transparent 30%, transparent 100%);
+    transition: background 1s var(--ease);
+    opacity: 0.5;
+  }
+  :global(.dark) #glow-bounce {
+    --sl-bounce: var(--sl-bounce-dark);
+  }
+
+  /* ── perspective ── */
+  .perspective {
+    position: absolute;
+    transition: transform 1.7s var(--ease), opacity 4s ease;
+    top: -30vh;
+    right: 0;
+    width: 80vw;
+    height: 130vh;
+    opacity: 0.07;
+    transform-origin: top right;
+    transform-style: preserve-3d;
+    transform: matrix3d(
+      0.7500, -0.0625, 0, 0.0008,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1
+    );
+  }
+  :global(.dark) .perspective {
+    opacity: 0.3;
+    transform: matrix3d(
+      0.8333, 0.0833, 0, 0.0003,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1
+    );
+  }
+
+  /* ── leaves ── */
+  #leaves {
+    position: absolute;
+    background: url("/leaves.png") cover / no-repeat;
+    bottom: -20px;
+    right: -700px;
+    width: 1600px;
+    height: 1400px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: url(#wind);
+    animation: billow 8s ease-in-out infinite;
+  }
+
+  /* ── blinds ── */
+  #blinds { position: relative; width: 100%; }
+  #blinds .shutter,
+  #blinds .bar {
+    background-color: var(--sl-shadow);
+    transition: background-color 1s var(--ease);
+  }
+  :global(.dark) #blinds .shutter,
+  :global(.dark) #blinds .bar {
+    background-color: var(--sl-shadow-dark);
+  }
+
+  #blinds .shutters {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    gap: 60px;
+    transition: gap 1s var(--ease);
+  }
+  :global(.dark) #blinds .shutters { gap: 20px; }
+
+  #blinds .vertical {
+    top: 0;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+  }
+  .vertical > .bar { width: 5px; height: 100%; }
+
+  .shutter {
+    width: 100%;
+    height: 40px;
+    transition: height 1s var(--ease);
+  }
+  :global(.dark) .shutter { height: 80px; }
+
+  /* ── progressive blur ── */
+  #progressive-blur { position: absolute; inset: 0; }
+  #progressive-blur > div {
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+    mask-image: linear-gradient(252deg, transparent, transparent var(--s1), black var(--s2), black);
+    -webkit-mask-image: linear-gradient(252deg, transparent, transparent var(--s1), black var(--s2), black);
+  }
+  #progressive-blur > div:nth-child(1) { --blur: 6px; --s1: 0%; --s2: 0%; }
+  #progressive-blur > div:nth-child(2) { --blur: 12px; --s1: 40%; --s2: 80%; }
+  #progressive-blur > div:nth-child(3) { --blur: 48px; --s1: 40%; --s2: 70%; }
+  #progressive-blur > div:nth-child(4) { --blur: 96px; --s1: 70%; --s2: 80%; }
+
+  @keyframes billow {
+    0%   { transform: perspective(400px) rotateX(0) rotateY(0) scale(1); }
+    25%  { transform: perspective(400px) rotateX(1deg) rotateY(2deg) scale(1.02); }
+    50%  { transform: perspective(400px) rotateX(-4deg) rotateY(-2deg) scale(0.97); }
+    75%  { transform: perspective(400px) rotateX(1deg) rotateY(-1deg) scale(1.04); }
+    100% { transform: perspective(400px) rotateX(0) rotateY(0) scale(1); }
+  }
+
+  /* ── sunrise / sunset ── */
+  .sunlit-hero.sunrise { animation: sunrise 1.2s var(--ease) forwards; }
+  .sunlit-hero.sunset  { animation: sunset 1.7s var(--ease) forwards; }
+
+  @keyframes sunrise {
+    0%   { background-color: var(--sl-night); }
+    10%  { background-color: var(--sl-dawn); }
+    35%  { background-color: var(--sl-morning); }
+    100% { background-color: var(--sl-day); }
+  }
+  @keyframes sunset {
+    0%   { background-color: var(--sl-day); }
+    30%  { background-color: var(--sl-evening); }
+    60%  { background-color: var(--sl-dusk); }
+    90%  { background-color: var(--sl-dawn); }
+    100% { background-color: var(--sl-night); }
+  }
+
+  /* ════════════════════════════════════════
+     HERO CONTENT
+     ════════════════════════════════════════ */
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 0 1.5rem;
+    isolation: isolate;
+    max-width: 36rem;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sl-shadow);
+    background: rgba(0,0,0,0.04);
+    padding: 0.25em 0.85em;
+    border-radius: 9999px;
+    margin-bottom: 1.5rem;
+    transition: color 1s var(--ease), background 1s var(--ease);
+  }
+  :global(.dark) .hero-badge {
+    color: var(--sl-day);
+    background: rgba(255,255,255,0.06);
+  }
+
+  .hero-title {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: clamp(4.5rem, 16vw, 11rem);
+    font-weight: 400;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--sl-shadow);
+    margin-bottom: 1.5rem;
+    transition: color 1s var(--ease);
+  }
+  :global(.dark) .hero-title {
+    color: var(--sl-day);
+  }
+
+  .hero-desc {
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: var(--sl-shadow);
+    opacity: 0.5;
+    margin: 0 auto 2.25rem;
+    max-width: 26rem;
+    transition: color 1s var(--ease);
+  }
+  :global(.dark) .hero-desc {
+    color: var(--sl-day);
+  }
+
+  /* ── buttons ── */
+  .hero-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+  }
+
+  .hero-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.7em 1.75em;
+    border-radius: 8px;
+    background: var(--sl-shadow);
+    color: var(--sl-day);
+    text-decoration: none;
+    transition: all 0.2s ease, background 1s var(--ease), color 1s var(--ease);
+  }
+  .hero-btn-primary:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+  }
+  :global(.dark) .hero-btn-primary {
+    background: var(--sl-day);
+    color: var(--sl-night);
+  }
+
+  .hero-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.7em 1.75em;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--sl-shadow);
+    text-decoration: none;
+    border: 1px solid rgba(0,0,0,0.12);
+    transition: all 0.2s ease, color 1s var(--ease), border-color 1s var(--ease);
+  }
+  .hero-btn-ghost:hover {
+    background: rgba(0,0,0,0.04);
+  }
+  :global(.dark) .hero-btn-ghost {
+    color: var(--sl-day);
+    border-color: rgba(255,255,255,0.12);
+  }
+  :global(.dark) .hero-btn-ghost:hover {
+    background: rgba(255,255,255,0.06);
+  }
+
+  /* ── hint ── */
+  .hero-hint {
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--sl-shadow);
+    opacity: 0.22;
+    transition: color 1s var(--ease);
+  }
+  :global(.dark) .hero-hint { color: var(--sl-day); }
+
+  .hero-hint kbd {
+    display: inline-block;
+    padding: 0.1em 0.45em;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    background: rgba(0,0,0,0.03);
+    transition: border-color 1s var(--ease), background 1s var(--ease);
+  }
+  :global(.dark) .hero-hint kbd {
+    border-color: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* ── scroll indicator ── */
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--sl-shadow);
+    opacity: 0.18;
+    animation: float 2.5s ease-in-out infinite;
+    transition: color 1s var(--ease);
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  :global(.dark) .scroll-hint { color: var(--sl-day); }
+
+  @keyframes float {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(8px); }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var hero = document.getElementById('sunlit-hero');
+    var hint = document.getElementById('scroll-hint');
+    var isDark = document.documentElement.classList.contains('dark');
+
+    function toggleSun() {
+      isDark = !isDark;
+      hero.classList.remove('sunrise', 'sunset');
+      // force reflow so the animation restarts
+      void hero.offsetWidth;
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        hero.classList.add('sunset');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        hero.classList.add('sunrise');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.code === 'Space' && hero && !e.target.closest('input,textarea,select')) {
+        e.preventDefault();
+        toggleSun();
+      }
+    });
+
+    hero && hero.addEventListener('click', function (e) {
+      if (e.target.closest('a, button, input')) return;
+      toggleSun();
+    });
+
+    // scroll hint
+    hint && hint.addEventListener('click', function () {
+      var next = hero.nextElementSibling;
+      next && next.scrollIntoView({ behavior: 'smooth' });
+    });
+  })();
+</script>

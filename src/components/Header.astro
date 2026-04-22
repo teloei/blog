@@ -1,0 +1,109 @@
+---
+const navLinks = [
+  { href: '/', label: '首页' },
+  { href: '/blog', label: '博客' },
+  { href: '/archive', label: '归档' },
+  { href: '/about', label: '关于' },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="sticky top-0 z-50 border-b border-warm-200 dark:border-warm-800 bg-cream/80 dark:bg-warm-900/80 backdrop-blur-lg">
+  <div class="max-w-page mx-auto px-5 h-16 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="font-serif text-xl md:text-2xl text-charcoal dark:text-warm-50 hover:text-terra transition-colors">
+      忒卷
+    </a>
+
+    <!-- Desktop Nav -->
+    <nav class="hidden md:flex items-center gap-1">
+      {navLinks.map(link => (
+        <a
+          href={link.href}
+          class:list={[
+            'px-4 py-2 rounded-btn text-sm font-medium transition-colors',
+            currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))
+              ? 'text-terra bg-terra/5'
+              : 'text-warm-600 hover:text-charcoal dark:text-warm-400 dark:hover:text-warm-50 hover:bg-warm-100 dark:hover:bg-warm-800',
+          ]}
+        >
+          {link.label}
+        </a>
+      ))}
+      <button
+        id="theme-toggle"
+        class="ml-2 p-2 rounded-btn text-warm-500 hover:text-charcoal dark:hover:text-warm-50 hover:bg-warm-100 dark:hover:bg-warm-800 transition-colors"
+        aria-label="切换主题"
+      >
+        <svg class="w-5 h-5 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+        </svg>
+        <svg class="w-5 h-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+        </svg>
+      </button>
+    </nav>
+
+    <!-- Mobile Menu Button -->
+    <button
+      id="mobile-menu-btn"
+      class="md:hidden p-2 rounded-btn text-warm-600 dark:text-warm-400 hover:bg-warm-100 dark:hover:bg-warm-800 transition-colors"
+      aria-label="菜单"
+    >
+      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="md:hidden hidden border-t border-warm-200 dark:border-warm-800 bg-cream dark:bg-warm-900">
+    <nav class="max-w-page mx-auto px-5 py-4 flex flex-col gap-1">
+      {navLinks.map(link => (
+        <a
+          href={link.href}
+          class:list={[
+            'px-4 py-3 rounded-btn text-sm font-medium transition-colors',
+            currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))
+              ? 'text-terra bg-terra/5'
+              : 'text-warm-600 hover:text-charcoal dark:text-warm-400 dark:hover:text-warm-50 hover:bg-warm-100 dark:hover:bg-warm-800',
+          ]}
+        >
+          {link.label}
+        </a>
+      ))}
+      <button id="mobile-theme-toggle" class="px-4 py-3 rounded-btn text-sm font-medium text-warm-600 dark:text-warm-400 hover:bg-warm-100 dark:hover:bg-warm-800 transition-colors text-left">
+        切换主题
+      </button>
+    </nav>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    btn?.addEventListener('click', () => {
+      menu?.classList.toggle('hidden');
+    });
+
+    const themeToggle = document.getElementById('theme-toggle');
+    const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+
+    const handleThemeToggle = () => {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    };
+
+    themeToggle?.addEventListener('click', handleThemeToggle);
+    mobileThemeToggle?.addEventListener('click', handleThemeToggle);
+  }
+
+  // Initialize on first load
+  initHeader();
+
+  // Re-initialize after Astro page transitions (if any)
+  document.addEventListener('astro:after-swap', initHeader);
+</script>

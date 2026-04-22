@@ -1,0 +1,41 @@
+---
+export const prerender = true;
+import BlogPost from '../../layouts/BlogPost.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = (await getCollection('blog', ({ data }) => !data.draft))
+    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+  return posts.map((post, index) => ({
+    params: { slug: post.slug },
+    props: {
+      post,
+      prevPost: index < posts.length - 1 ? posts[index + 1] : null,
+      nextPost: index > 0 ? posts[index - 1] : null,
+    },
+  }));
+}
+
+const { post, prevPost, nextPost } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BlogPost frontmatter={post.data}>
+  <Content />
+</BlogPost>
+
+<script define:vars={{ prevPost, nextPost }}>
+  const navEl = document.getElementById('post-nav');
+  if (navEl && (prevPost || nextPost)) {
+    const prev = prevPost ? `<a href="/blog/${prevPost.slug}" class="flex flex-col p-5 bg-white dark:bg-warm-800 rounded-card border border-warm-200 dark:border-warm-700 hover:shadow-soft transition-all group">
+      <span class="text-xs text-warm-400 mb-1">← 上一篇</span>
+      <span class="font-serif text-sm text-charcoal dark:text-warm-50 group-hover:text-terra transition-colors">${prevPost.data.title}</span>
+    </a>` : '<div></div>';
+    const next = nextPost ? `<a href="/blog/${nextPost.slug}" class="flex flex-col p-5 bg-white dark:bg-warm-800 rounded-card border border-warm-200 dark:border-warm-700 hover:shadow-soft transition-all group text-right">
+      <span class="text-xs text-warm-400 mb-1">下一篇 →</span>
+      <span class="font-serif text-sm text-charcoal dark:text-warm-50 group-hover:text-terra transition-colors">${nextPost.data.title}</span>
+    </a>` : '<div></div>';
+    navEl.innerHTML = prev + next;
+  }
+</script>

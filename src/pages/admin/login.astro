@@ -1,0 +1,652 @@
+---
+export const prerender = false;
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Blog Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #FAFAF9;
+      --surface: #FFFFFF;
+      --surface-hover: #F5F5F4;
+      --border: #E7E5E4;
+      --text-primary: #1C1917;
+      --text-secondary: #78716C;
+      --text-tertiary: #A8A29E;
+      --accent: #D97757;
+      --accent-hover: #CC6B4D;
+      --accent-subtle: rgba(217, 119, 87, 0.08);
+      --error: #DC2626;
+      --error-subtle: rgba(220, 38, 38, 0.06);
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: 'Instrument Serif', Georgia, serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.02);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.03);
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0F0F0E;
+        --surface: #181817;
+        --surface-hover: #1F1F1E;
+        --border: #2C2C2A;
+        --text-primary: #FAFAF9;
+        --text-secondary: #A8A29E;
+        --text-tertiary: #78716C;
+        --accent-subtle: rgba(217, 119, 87, 0.15);
+      }
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { height: 100%; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ══ LEFT PANEL ══ */
+    .left-panel {
+      background: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 80%, rgba(217, 119, 87, 0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(217, 119, 87, 0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    .brand {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .brand-name {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      color: white;
+      letter-spacing: -0.01em;
+    }
+
+    .left-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .left-tagline {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 3.5vw, 2.5rem);
+      font-weight: 400;
+      color: white;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+
+    .left-tagline em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .left-desc {
+      font-size: 14px;
+      color: var(--text-tertiary);
+      line-height: 1.7;
+      max-width: 300px;
+    }
+
+    .left-stats {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 32px;
+    }
+
+    .left-stat-value {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+    }
+
+    .left-stat-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ══ RIGHT PANEL ══ */
+    .right-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 40px;
+      background: var(--surface);
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .login-header {
+      margin-bottom: 32px;
+    }
+
+    .login-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .login-title {
+      font-family: var(--font-serif);
+      font-size: 1.75rem;
+      font-weight: 400;
+      color: var(--text-primary);
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .login-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Form ── */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .input {
+      width: 100%;
+      padding: 10px 12px 10px 38px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      outline: none;
+      color: var(--text-primary);
+      background: var(--surface);
+      transition: all 0.15s var(--ease);
+      -webkit-appearance: none;
+    }
+
+    .input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-subtle);
+    }
+
+    .input::placeholder { color: var(--text-tertiary); }
+
+    .input.error {
+      border-color: var(--error);
+    }
+
+    /* Password toggle */
+    .pw-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+    }
+
+    .pw-toggle:hover { color: var(--text-primary); }
+
+    /* ── Error banner ── */
+    .error-banner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--error-subtle);
+      border: 1px solid rgba(220, 38, 38, 0.12);
+      border-radius: var(--radius-md);
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: var(--error);
+    }
+
+    .error-banner.show { display: flex; }
+
+    /* ── Submit button ── */
+    .btn-submit {
+      width: 100%;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      color: white;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.15s var(--ease);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(217, 119, 87, 0.25);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      background: var(--text-tertiary);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .btn-submit.loading .btn-spinner { display: block; }
+    .btn-submit.loading .btn-text { opacity: 0.7; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Credentials hint ── */
+    .cred-hint {
+      margin-top: 24px;
+      padding: 12px 14px;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .cred-hint-icon { font-size: 14px; flex-shrink: 0; }
+
+    .cred-hint-body {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .cred-hint-body strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: var(--radius-sm);
+      color: var(--accent);
+    }
+
+    /* ── Footer ── */
+    .login-footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .login-footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .login-footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { padding: 40px 24px; background: var(--bg); }
+      .login-box { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ LEFT PANEL ══ -->
+  <div class="left-panel">
+    <div class="brand">
+      <div class="brand-logo">✍️</div>
+      <span class="brand-name">忒卷</span>
+    </div>
+
+    <div class="left-content">
+      <h2 class="left-tagline">
+        写作是<br/>
+        <em>思考的延伸</em>
+      </h2>
+      <p class="left-desc">
+        管理你的文章、评论与读者。<br/>
+        一个简洁的后台，让创作保持专注。
+      </p>
+    </div>
+
+    <div class="left-stats" id="leftStats">
+      <div>
+        <div class="left-stat-value" id="statViews">—</div>
+        <div class="left-stat-label">Total Views</div>
+      </div>
+      <div>
+        <div class="left-stat-value" id="statArticles">—</div>
+        <div class="left-stat-label">Articles</div>
+      </div>
+      <div>
+        <div class="left-stat-value" id="statSubs">—</div>
+        <div class="left-stat-label">Subscribers</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT PANEL ══ -->
+  <div class="right-panel">
+    <div class="login-box">
+
+      <div class="login-header">
+        <p class="login-eyebrow">Admin Portal</p>
+        <h1 class="login-title">Welcome back</h1>
+        <p class="login-subtitle">Sign in to manage your blog content.</p>
+      </div>
+
+      <div class="error-banner" id="errorBanner">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span id="errorText">Invalid email or password</span>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="email">Email address</label>
+          <div class="input-wrap">
+            <span class="input-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </span>
+            <input
+              type="email" id="email" class="input"
+              placeholder="admin@blog.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </span>
+            <input
+              type="password" id="password" class="input"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+            <button type="button" class="pw-toggle" id="pwToggle" aria-label="Toggle password visibility">
+              <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <div class="btn-spinner" id="btnSpinner"></div>
+          <span class="btn-text">Sign In</span>
+        </button>
+      </form>
+
+      <div class="cred-hint">
+        <span class="cred-hint-icon">🔑</span>
+        <div class="cred-hint-body">
+          <strong>Default credentials</strong><br/>
+          Email: <code>admin@blog.com</code><br/>
+          Password: <code>admin123</code>
+        </div>
+      </div>
+
+      <div class="login-footer">
+        <a href="/" target="_blank">← Back to blog</a>
+        &nbsp;·&nbsp;
+        <span>忒卷 Admin v2.0</span>
+      </div>
+
+    </div>
+  </div>
+
+  <script is:inline>
+    // Password toggle
+    const pwToggle = document.getElementById('pwToggle');
+    const pwInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+    
+    pwToggle.addEventListener('click', () => {
+      const show = pwInput.type === 'password';
+      pwInput.type = show ? 'text' : 'password';
+      eyeIcon.innerHTML = show
+        ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+        : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    });
+
+    // Form submit
+    const form = document.getElementById('loginForm');
+    const errorBanner = document.getElementById('errorBanner');
+    const errorText = document.getElementById('errorText');
+    const btn = document.getElementById('submitBtn');
+    const spinner = document.getElementById('btnSpinner');
+
+    function setLoading(on) {
+      btn.disabled = on;
+      btn.classList.toggle('loading', on);
+    }
+
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorBanner.classList.add('show');
+      document.getElementById('email').classList.add('error');
+      document.getElementById('password').classList.add('error');
+    }
+
+    function clearError() {
+      errorBanner.classList.remove('show');
+      document.getElementById('email').classList.remove('error');
+      document.getElementById('password').classList.remove('error');
+    }
+
+    ['email', 'password'].forEach(id => {
+      document.getElementById(id).addEventListener('input', clearError);
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+      setLoading(true);
+      
+      try {
+        const res = await fetch('/api/admin/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            email: document.getElementById('email').value.trim(),
+            password: document.getElementById('password').value,
+          }),
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          showError(data.error || 'Invalid email or password');
+          setLoading(false);
+          return;
+        }
+        
+        try {
+          const verifyRes = await fetch('/api/admin/auth/me', { credentials: 'same-origin' });
+          if (verifyRes.ok) {
+            window.location.replace('/admin');
+          } else {
+            showError('Session could not be established. Please check your browser cookie settings.');
+            setLoading(false);
+          }
+        } catch {
+          showError('Session verification failed. Please try again.');
+          setLoading(false);
+        }
+      } catch {
+        showError('Network error — please try again');
+        setLoading(false);
+      }
+    });
+
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+
+    // Load live stats
+    fetch('/api/admin/stats', { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d) return;
+        const o = d.overview || {};
+        document.getElementById('statViews').textContent = (o.totalViews || 0).toLocaleString();
+        document.getElementById('statArticles').textContent = (o.totalArticles || 0);
+        document.getElementById('statSubs').textContent = (o.totalSubscribers || 0);
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>

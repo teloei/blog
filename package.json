@@ -1,0 +1,33 @@
+{
+  "name": "teloei-blog",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "A personal blog built with Astro, deployed on Cloudflare Pages",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "wrangler pages dev dist",
+    "db:init": "wrangler d1 execute teloei-blog-db --local --file=./schema.sql",
+    "db:init:cms": "wrangler d1 execute teloei-blog-db --local --file=./schema_cms.sql",
+    "db:init:all": "npm run db:init && npm run db:init:cms",
+    "db:init:remote": "wrangler d1 execute teloei-blog-db --remote --file=./schema.sql",
+    "db:init:remote:cms": "wrangler d1 execute teloei-blog-db --remote --file=./schema_cms.sql",
+    "db:init:remote:all": "npm run db:init:remote && npm run db:init:remote:cms",
+    "admin:create": "node ./scripts/create-admin.mjs",
+    "admin:create:remote": "node ./scripts/create-admin.mjs --remote",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^5.5.0",
+    "@astrojs/cloudflare": "^12.2.0",
+    "@astrojs/mdx": "^4.2.0",
+    "@astrojs/rss": "^4.0.0",
+    "@astrojs/sitemap": "^3.3.0",
+    "@tailwindcss/vite": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "wrangler": "^4.0.0"
+  }
+}

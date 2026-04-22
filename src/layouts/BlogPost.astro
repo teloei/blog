@@ -1,0 +1,235 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+export interface Props {
+  frontmatter: {
+    title: string;
+    date: Date;
+    tags?: string[];
+    excerpt?: string;
+    image?: string;
+    draft?: boolean;
+  };
+  slug?: string;
+}
+
+const { frontmatter, slug } = Astro.props;
+const { title, date, tags = [], excerpt = '', image } = frontmatter;
+
+const formattedDate = date.toLocaleDateString('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+const rawContent = await Astro.slots.render('default');
+const readingTime = Math.max(1, Math.ceil(rawContent.length / 400));
+---
+
+<BaseLayout title={`${title} — Teloei's Blog`} description={excerpt} image={image} article pubDate={date}>
+  <Header slot="header" />
+  <article class="max-w-article mx-auto px-5 py-10 md:py-16">
+    <header class="mb-10 md:mb-14">
+      {tags.length > 0 && (
+        <div class="flex flex-wrap gap-2 mb-4">
+          {tags.map(tag => (
+            <a href={`/blog?tag=${tag}`} class="text-xs font-medium px-3 py-1 rounded-full bg-terra/10 dark:bg-terra/20 text-terra hover:bg-terra/20 dark:hover:bg-terra/30 transition-colors">
+              {tag}
+            </a>
+          ))}
+        </div>
+      )}
+      <h1 class="text-3xl md:text-[3rem] font-serif text-charcoal dark:text-warm-50 leading-tight mb-4">{title}</h1>
+      <div class="flex items-center gap-3 text-sm text-warm-400">
+        <time datetime={date.toISOString()}>{formattedDate}</time>
+        <span>·</span>
+        <span>{readingTime} 分钟阅读</span>
+        <span>·</span>
+        <span id="view-count" class="inline-flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          <span id="view-count-num">-</span>
+        </span>
+      </div>
+      {image && (
+        <img src={image} alt={title} class="mt-8 rounded-card w-full aspect-video object-cover shadow-soft" loading="lazy" />
+      )}
+    </header>
+
+    <div class="prose">
+      <slot />
+    </div>
+
+    <!-- 评论区 -->
+    <section id="comments-section" class="mt-16 pt-10 border-t border-warm-200 dark:border-warm-700">
+      <h2 class="text-2xl font-serif text-charcoal dark:text-warm-50 mb-8">评论</h2>
+
+      <!-- 评论表单 -->
+      <form id="comment-form" class="bg-white dark:bg-warm-800 rounded-card p-6 mb-10 border border-warm-200 dark:border-warm-700">
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+          <input type="text" name="author" placeholder="昵称" maxlength="30"
+            class="w-full px-4 py-2.5 border border-warm-200 dark:border-warm-700 rounded-input text-sm bg-warm-50 dark:bg-warm-900 text-charcoal dark:text-warm-50 focus:border-terra focus:ring-2 focus:ring-terra/10 outline-none transition-all" />
+          <input type="email" name="email" placeholder="邮箱（不会公开）"
+            class="w-full px-4 py-2.5 border border-warm-200 dark:border-warm-700 rounded-input text-sm bg-warm-50 dark:bg-warm-900 text-charcoal dark:text-warm-50 focus:border-terra focus:ring-2 focus:ring-terra/10 outline-none transition-all" />
+        </div>
+        <input type="url" name="website" placeholder="网站（可选）"
+          class="w-full px-4 py-2.5 border border-warm-200 dark:border-warm-700 rounded-input text-sm bg-warm-50 dark:bg-warm-900 text-charcoal dark:text-warm-50 focus:border-terra focus:ring-2 focus:ring-terra/10 outline-none transition-all mb-4" />
+        <textarea name="content" rows="4" placeholder="写下你的想法..." required maxlength="2000"
+          class="w-full px-4 py-2.5 border border-warm-200 dark:border-warm-700 rounded-input text-sm bg-warm-50 dark:bg-warm-900 text-charcoal dark:text-warm-50 focus:border-terra focus:ring-2 focus:ring-terra/10 outline-none transition-all resize-none mb-4"></textarea>
+        <div class="flex justify-end">
+          <button type="submit"
+            class="px-6 py-2.5 bg-terra text-white text-sm font-medium rounded-btn hover:bg-terra-dark transition-colors">
+            发表评论
+          </button>
+        </div>
+        <p id="comment-error" class="hidden mt-3 text-sm text-red-500"></p>
+        <p id="comment-success" class="hidden mt-3 text-sm text-green-600">评论发表成功！</p>
+      </form>
+
+      <!-- 评论列表 -->
+      <div id="comments-list">
+        <p class="text-warm-400 text-sm">加载评论中...</p>
+      </div>
+    </section>
+
+    <footer class="mt-14 pt-8 border-t border-warm-200 dark:border-warm-700">
+      <div class="flex items-center gap-3 mb-8">
+        <span class="text-sm text-warm-400">分享：</span>
+        <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(Astro.url.href)}`} target="_blank" rel="noopener" class="text-sm text-warm-500 hover:text-terra transition-colors">Twitter</a>
+        <button id="copy-link" class="text-sm text-warm-500 hover:text-terra transition-colors">复制链接</button>
+      </div>
+      <div id="post-nav" class="grid md:grid-cols-2 gap-4"></div>
+    </footer>
+  </article>
+  <Footer slot="footer" />
+</BaseLayout>
+
+<script define:vars={{ slug }}>
+  // === 浏览量 ===
+  async function trackView() {
+    try {
+      await fetch('/api/views', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug }) });
+      const res = await fetch('/api/views?slug=' + encodeURIComponent(slug));
+      const data = await res.json();
+      document.getElementById('view-count-num').textContent = data.views || 0;
+    } catch {}
+  }
+  trackView();
+
+  // === 评论系统 ===
+  const IP_HASH_KEY = 'blog_ip_hash';
+  function getIpHash() {
+    let h = localStorage.getItem(IP_HASH_KEY);
+    if (!h) { h = crypto.randomUUID?.() || Math.random().toString(36).slice(2); localStorage.setItem(IP_HASH_KEY, h); }
+    return h;
+  }
+
+  async function loadComments() {
+    const list = document.getElementById('comments-list');
+    try {
+      const res = await fetch('/api/comments?slug=' + encodeURIComponent(slug));
+      const data = await res.json();
+      if (data.total === 0) { list.innerHTML = '<p class="text-warm-400 text-sm">暂无评论，来抢沙发吧！</p>'; return; }
+      list.innerHTML = renderComments(data.comments);
+    } catch { list.innerHTML = '<p class="text-warm-400 text-sm">评论加载失败</p>'; }
+  }
+
+  function renderComments(comments, depth = 0) {
+    return comments.map(c => `
+      <div class="${depth > 0 ? 'ml-8 md:ml-12' : ''} mb-4" data-comment-id="${c.id}">
+        <div class="bg-white dark:bg-warm-800 rounded-card p-4 border border-warm-100 dark:border-warm-700">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-8 h-8 rounded-full bg-terra/10 flex items-center justify-center text-terra text-sm font-medium">${(c.author || '匿')[0]}</div>
+            <div>
+              <span class="text-sm font-medium text-charcoal dark:text-warm-50">${c.author || '匿名'}${c.is_admin ? ' <span class="text-xs bg-terra/10 text-terra px-1.5 py-0.5 rounded">博主</span>' : ''}</span>
+              <span class="text-xs text-warm-400 ml-2">${new Date(c.created_at).toLocaleDateString('zh-CN')}</span>
+            </div>
+          </div>
+          <p class="text-sm text-warm-600 dark:text-warm-400 leading-relaxed mb-2">${escapeHtml(c.content)}</p>
+          <div class="flex items-center gap-3">
+            <button onclick="likeComment(${c.id})" class="text-xs text-warm-400 hover:text-terra transition-colors">👍 <span>${c.like_count || 0}</span></button>
+            <button onclick="replyTo('${c.author || '匿名'}', ${c.id})" class="text-xs text-warm-400 hover:text-terra transition-colors">回复</button>
+          </div>
+        </div>
+        ${c.children && c.children.length > 0 ? renderComments(c.children, depth + 1) : ''}
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function replyTo(author, parentId) {
+    const textarea = document.querySelector('#comment-form textarea');
+    textarea.value = `@${author} `;
+    textarea.dataset.parentId = parentId;
+    textarea.focus();
+  }
+
+  window.replyTo = replyTo;
+  window.likeComment = async function(commentId) {
+    try {
+      const res = await fetch('/api/comments/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commentId, ipHash: getIpHash() })
+      });
+      if (res.ok) loadComments();
+    } catch {}
+  };
+
+  // 提交评论
+  document.getElementById('comment-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const errorEl = document.getElementById('comment-error');
+    const successEl = document.getElementById('comment-success');
+    errorEl.classList.add('hidden');
+    successEl.classList.add('hidden');
+
+    const data = {
+      slug,
+      author: form.author.value || '匿名',
+      email: form.email.value || undefined,
+      website: form.website.value || undefined,
+      content: form.content.value,
+      parentId: form.content.dataset.parentId || undefined,
+    };
+
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (!res.ok) { errorEl.textContent = result.error; errorEl.classList.remove('hidden'); return; }
+      form.reset();
+      delete form.content.dataset.parentId;
+      successEl.classList.remove('hidden');
+      setTimeout(() => successEl.classList.add('hidden'), 3000);
+      loadComments();
+    } catch { errorEl.textContent = '网络错误，请重试'; errorEl.classList.remove('hidden'); }
+  });
+
+  loadComments();
+</script>
+
+<script>
+  document.getElementById('copy-link')?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      const btn = document.getElementById('copy-link')!;
+      const original = btn.textContent;
+      btn.textContent = '已复制！';
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    } catch {}
+  });
+</script>

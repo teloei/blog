@@ -1,0 +1,47 @@
+---
+export const prerender = true;
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = (await getCollection('blog', ({ data }) => !data.draft));
+const tagMap = new Map<string, number>();
+allPosts.forEach(post => {
+  post.data.tags.forEach(tag => {
+    tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
+  });
+});
+
+const sortedTags = [...tagMap.entries()].sort((a, b) => b[1] - a[1]);
+const maxCount = sortedTags.length > 0 ? sortedTags[0][1] : 1;
+---
+export const prerender = true;
+
+<BaseLayout title="标签 �?Teloei's Blog">
+  <Header slot="header" />
+  <div class="max-w-article mx-auto px-5 py-10 md:py-16">
+    <h1 class="text-3xl md:text-h1 font-serif text-charcoal dark:text-warm-50 mb-10">标签</h1>
+
+    <div class="flex flex-wrap gap-3">
+      {sortedTags.map(([tag, count]) => {
+        const size = 0.85 + (count / maxCount) * 0.4;
+        return (
+          <a
+            href={`/blog?tag=${tag}`}
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white dark:bg-warm-800 border border-warm-200 dark:border-warm-700 text-charcoal dark:text-warm-50 hover:border-terra hover:text-terra transition-all"
+            style={`font-size: ${size}rem`}
+          >
+            {tag}
+            <span class="text-xs text-warm-400">{count}</span>
+          </a>
+        );
+      })}
+    </div>
+
+    {sortedTags.length === 0 && (
+      <p class="text-warm-400 text-center py-10">暂无标签</p>
+    )}
+  </div>
+  <Footer slot="footer" />
+</BaseLayout>
